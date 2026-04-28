@@ -63,6 +63,72 @@ zoraBlock("variants with @spice.as number", t => {
   t->testEqual(`decode 2.0`, variantDecoded, Ok(Variants.Two))
 })
 
+zoraBlock("variant payload with option", t => {
+  let encodedSome = Variants.WithOption(Some("value"))->Variants.withOption_encode
+  t->testEqual(
+    `encode Some`,
+    encodedSome,
+    JSON.Array([JSON.String("WithOption"), JSON.String("value")]),
+  )
+
+  let encoded = Variants.WithOption(None)->Variants.withOption_encode
+  t->testEqual(`encode None`, encoded, JSON.Array([JSON.String("WithOption"), JSON.Null]))
+
+  let decodedSome =
+    JSON.Array([JSON.String("WithOption"), JSON.String("value")])->Variants.withOption_decode
+  t->testEqual(`decode Some`, decodedSome, Ok(Variants.WithOption(Some("value"))))
+
+  let decoded = JSON.Array([JSON.String("WithOption"), JSON.Null])->Variants.withOption_decode
+  t->testEqual(`decode None`, decoded, Ok(Variants.WithOption(None)))
+
+  let decodedInvalid =
+    JSON.Array([JSON.String("WithOption"), JSON.Number(1.0)])->Variants.withOption_decode
+  t->test("decode invalid option payload includes variant payload index", async t => {
+    switch decodedInvalid {
+    | Error({path, message, value}) => {
+        t->equal(path, "[1]", "path")
+        t->equal(message, "Not a string", "message")
+        t->equal(value, JSON.Number(1.0), "value")
+      }
+    | Ok(_) => t->fail("expected decode to fail")
+    }
+  })
+})
+
+zoraBlock("variant with payloadless and option payload constructors", t => {
+  let encodedA = Variants.A->Variants.optionPayloadVariant_encode
+  t->testEqual(`encode A`, encodedA, JSON.Array([JSON.String("A")]))
+
+  let encodedSome = Variants.B(Some("value"))->Variants.optionPayloadVariant_encode
+  t->testEqual(`encode B Some`, encodedSome, JSON.Array([JSON.String("B"), JSON.String("value")]))
+
+  let encodedNone = Variants.B(None)->Variants.optionPayloadVariant_encode
+  t->testEqual(`encode B None`, encodedNone, JSON.Array([JSON.String("B"), JSON.Null]))
+
+  let decodedA = JSON.Array([JSON.String("A")])->Variants.optionPayloadVariant_decode
+  t->testEqual(`decode A`, decodedA, Ok(Variants.A))
+
+  let decodedSome =
+    JSON.Array([JSON.String("B"), JSON.String("value")])->Variants.optionPayloadVariant_decode
+  t->testEqual(`decode B Some`, decodedSome, Ok(Variants.B(Some("value"))))
+
+  let decodedNone = JSON.Array([JSON.String("B"), JSON.Null])->Variants.optionPayloadVariant_decode
+  t->testEqual(`decode B None`, decodedNone, Ok(Variants.B(None)))
+
+  let decodedInvalid =
+    JSON.Array([JSON.String("B"), JSON.Number(1.0)])->Variants.optionPayloadVariant_decode
+  t->test("decode invalid B option payload includes payload index", async t => {
+    switch decodedInvalid {
+    | Error({path, message, value}) => {
+        t->equal(path, "[1]", "path")
+        t->equal(message, "Not a string", "message")
+        t->equal(value, JSON.Number(1.0), "value")
+      }
+    | Ok(_) => t->fail("expected decode to fail")
+    }
+  })
+})
+
 zoraBlock("variant error path includes correct index", t => {
   // Variant with args: ["WithArgs", int, string]
   // Index 0 is the constructor name, index 1 is the int, index 2 is the string

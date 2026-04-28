@@ -5,6 +5,7 @@
   "description": "Examples for the Spice PPX",
   "license": "MIT",
   "devDependencies": {
+    "@rescript/runtime": "12.0.0",
     "rescript": "12.0.0"
   },
   "scripts": {

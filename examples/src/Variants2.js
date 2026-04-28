@@ -96,7 +96,7 @@ function user_encode(v) {
     ],
     [
       "nickname",
-      Spice.optionToJson(Spice.stringToJson, extra)
+      Spice.optionalToJson(Spice.stringToJson, extra)
     ],
     [
       "language",
@@ -111,7 +111,7 @@ function user_decode(v) {
   }
   let id = Stdlib_Option.getOr(Stdlib_Option.map(v["id"], Spice.intFromJson), Spice.error(undefined, "id" + " missing", v));
   if (id.TAG === "Ok") {
-    let nickname = Stdlib_Option.getOr(Stdlib_Option.map(v["nickname"], extra => Spice.optionFromJson(Spice.stringFromJson, extra)), {
+    let nickname = Stdlib_Option.getOr(Stdlib_Option.map(v["nickname"], json => Stdlib_Result.map(Spice.stringFromJson(json), v => v)), {
       TAG: "Ok",
       _0: undefined
     });

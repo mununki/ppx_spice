@@ -120,6 +120,108 @@ function t4_decode(v) {
   }
 }
 
+function withOption_encode(v) {
+  return [
+    "WithOption",
+    Spice.optionToJson(Spice.stringToJson, v._0)
+  ];
+}
+
+function withOption_decode(v) {
+  if (!Array.isArray(v)) {
+    return Spice.error(undefined, "Not a variant", v);
+  }
+  if (v.length === 0) {
+    return Spice.error(undefined, "Expected variant, found empty array", v);
+  }
+  let match = v[0];
+  if (match === "WithOption") {
+    if (v.length !== 2) {
+      return Spice.error(undefined, "Invalid number of arguments to variant constructor", v);
+    }
+    let extra = v[1];
+    let v0 = Spice.optionFromJson(Spice.stringFromJson, extra);
+    if (v0.TAG === "Ok") {
+      return {
+        TAG: "Ok",
+        _0: {
+          TAG: "WithOption",
+          _0: v0._0
+        }
+      };
+    }
+    let e = v0._0;
+    return {
+      TAG: "Error",
+      _0: {
+        path: "[1]" + e.path,
+        message: e.message,
+        value: e.value
+      }
+    };
+  }
+  return Spice.error(undefined, "Invalid variant constructor", v[0]);
+}
+
+function optionPayloadVariant_encode(v) {
+  if (typeof v !== "object") {
+    return ["A"];
+  } else {
+    return [
+      "B",
+      Spice.optionToJson(Spice.stringToJson, v._0)
+    ];
+  }
+}
+
+function optionPayloadVariant_decode(v) {
+  if (!Array.isArray(v)) {
+    return Spice.error(undefined, "Not a variant", v);
+  }
+  if (v.length === 0) {
+    return Spice.error(undefined, "Expected variant, found empty array", v);
+  }
+  let match = v[0];
+  if (typeof match === "string") {
+    switch (match) {
+      case "A" :
+        if (v.length !== 1) {
+          return Spice.error(undefined, "Invalid number of arguments to variant constructor", v);
+        } else {
+          return {
+            TAG: "Ok",
+            _0: "A"
+          };
+        }
+      case "B" :
+        if (v.length !== 2) {
+          return Spice.error(undefined, "Invalid number of arguments to variant constructor", v);
+        }
+        let extra = v[1];
+        let v0 = Spice.optionFromJson(Spice.stringFromJson, extra);
+        if (v0.TAG === "Ok") {
+          return {
+            TAG: "Ok",
+            _0: {
+              TAG: "B",
+              _0: v0._0
+            }
+          };
+        }
+        let e = v0._0;
+        return {
+          TAG: "Error",
+          _0: {
+            path: "[1]" + e.path,
+            message: e.message,
+            value: e.value
+          }
+        };
+    }
+  }
+  return Spice.error(undefined, "Invalid variant constructor", v[0]);
+}
+
 function withArgs_decode(v) {
   if (!Array.isArray(v)) {
     return Spice.error(undefined, "Not a variant", v);
@@ -179,6 +281,10 @@ export {
   t3_decode,
   t4_encode,
   t4_decode,
+  withOption_encode,
+  withOption_decode,
+  optionPayloadVariant_encode,
+  optionPayloadVariant_decode,
   withArgs_decode,
 }
 /* No side effect */

@@ -10,6 +10,10 @@ dependencies:
     version: link:..
 
 devDependencies:
+  '@rescript/runtime':
+    specifier: 12.0.0
+    version: 12.0.0
+
   rescript:
     specifier: 12.0.0
     version: 12.0.0

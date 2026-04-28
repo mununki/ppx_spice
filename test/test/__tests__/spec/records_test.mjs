@@ -92,6 +92,47 @@ Zora.test("record with optional field", t => {
     label: undefined
   });
   testEqual(t, `encode omit optional field with None field`, encoded$2, sampleJson3);
+  let decodedMissing = Records.tOp_decode(sampleJson3);
+  t.test("decode missing option and optional fields", async t => {
+    if (decodedMissing.TAG === "Ok") {
+      let record = decodedMissing._0;
+      t.equal(record.label, undefined, "label");
+      t.equal(record.value, undefined, "value");
+      return;
+    }
+    t.fail("expected decode to succeed");
+  });
+  let sample4 = {
+    label: null
+  };
+  let sampleJson4 = sample4;
+  let decodedNull = Records.tOp_decode(sampleJson4);
+  t.test("decode null option field returns error", async t => {
+    if (decodedNull.TAG === "Ok") {
+      t.fail("expected decode to fail");
+      return;
+    }
+    let match = decodedNull._0;
+    t.equal(match.path, ".label", "path");
+    t.equal(match.message, "Not a string", "message");
+    t.equal(match.value, null, "value");
+  });
+  let sample5 = {
+    label: "sample",
+    value: null
+  };
+  let sampleJson5 = sample5;
+  let decodedNullOptional = Records.tOp_decode(sampleJson5);
+  t.test("decode null optional field returns error", async t => {
+    if (decodedNullOptional.TAG === "Ok") {
+      t.fail("expected decode to fail");
+      return;
+    }
+    let match = decodedNullOptional._0;
+    t.equal(match.path, ".value", "path");
+    t.equal(match.message, "Not a number", "message");
+    t.equal(match.value, null, "value");
+  });
 });
 
 Zora.test("record with null", t => {
@@ -113,6 +154,61 @@ Zora.test("record with null", t => {
   testEqual(t, `decode`, decoded, {
     TAG: "Ok",
     _0: sampleRecord
+  });
+  let sampleWithOptionalNull = {
+    n: "n",
+    on: null,
+    n2: "n2"
+  };
+  let decoded$1 = Records.t2_decode(sampleWithOptionalNull);
+  t.test("decode optional null field", async t => {
+    if (decoded$1.TAG === "Ok") {
+      t.equal(decoded$1._0.on, null, "on");
+      return;
+    }
+    t.fail("expected decode to succeed");
+  });
+});
+
+Zora.test("record with option null value", t => {
+  let omittedJson = {};
+  let encodedOmitted = Records.t5_encode({
+    maybeNull: undefined
+  });
+  testEqual(t, `encode None omits key`, encodedOmitted, omittedJson);
+  let decodedOmitted = Records.t5_decode(omittedJson);
+  t.test("decode missing option null field", async t => {
+    if (decodedOmitted.TAG === "Ok") {
+      t.equal(decodedOmitted._0.maybeNull, undefined, "maybeNull");
+      return;
+    }
+    t.fail("expected decode to succeed");
+  });
+  let nullJson = {
+    maybeNull: null
+  };
+  let nullRecord = {
+    maybeNull: null
+  };
+  let encodedNull = Records.t5_encode(nullRecord);
+  testEqual(t, `encode Some(Null)`, encodedNull, nullJson);
+  let decodedNull = Records.t5_decode(nullJson);
+  testEqual(t, `decode Some(Null)`, decodedNull, {
+    TAG: "Ok",
+    _0: nullRecord
+  });
+  let valueJson = {
+    maybeNull: "value"
+  };
+  let valueRecord = {
+    maybeNull: "value"
+  };
+  let encodedValue = Records.t5_encode(valueRecord);
+  testEqual(t, `encode Some(Null.Value)`, encodedValue, valueJson);
+  let decodedValue = Records.t5_decode(valueJson);
+  testEqual(t, `decode Some(Null.Value)`, decodedValue, {
+    TAG: "Ok",
+    _0: valueRecord
   });
 });
 

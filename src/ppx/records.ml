@@ -134,6 +134,27 @@ let generate_decoder decls unboxed =
             | JSON.Object dict -> [%e generate_nested_switches decls]
             | _ -> Spice.error "Not an object" v]
 
+let wrap_decoder_with_some decode =
+  let wrap_some = Utils.expr_func ~arity:1 [%expr fun v -> Some(v)] in
+  Utils.expr_func ~arity:1
+    [%expr fun json -> Result.map ([%e decode] json) [%e wrap_some]]
+
+let make_omittable_codecs codecs =
+  let add_attrs attrs e = { e with pexp_attributes = attrs } in
+  match codecs with
+  | Some encode, Some decode ->
+      ( Some
+          (add_attrs [ Utils.attr_partial ]
+             [%expr Spice.optionalToJson [%e encode]]),
+        Some (wrap_decoder_with_some decode) )
+  | Some encode, None ->
+      ( Some
+          (add_attrs [ Utils.attr_partial ]
+             [%expr Spice.optionalToJson [%e encode]]),
+        None )
+  | None, Some decode -> (None, Some (wrap_decoder_with_some decode))
+  | None, None -> codecs
+
 let parse_decl generator_settings
     { pld_name = { txt }; pld_loc; pld_type; pld_attributes } =
   let default =
@@ -156,28 +177,15 @@ let parse_decl generator_settings
   in
   let is_option = Utils.check_option_type pld_type in
   let codecs = Codecs.generate_codecs generator_settings pld_type in
-  let add_attrs attrs e = { e with pexp_attributes = attrs } in
   let codecs =
     if is_optional then
-      match codecs with
-      | Some encode, Some decode ->
-          ( Some
-              (add_attrs [ Utils.attr_partial ]
-                 [%expr Spice.optionToJson [%e encode]]),
-            Some
-              (add_attrs [ Utils.attr_partial ]
-                 [%expr Spice.optionFromJson [%e decode]]) )
-      | Some encode, _ ->
-          ( Some
-              (add_attrs [ Utils.attr_partial ]
-                 [%expr Spice.optionToJson [%e encode]]),
-            None )
-      | _, Some decode ->
-          ( None,
-            Some
-              (add_attrs [ Utils.attr_partial ]
-                 [%expr Spice.optionFromJson [%e decode]]) )
-      | None, None -> codecs
+      make_omittable_codecs codecs
+    else if is_option then
+      match pld_type.ptyp_desc with
+      | Ptyp_constr ({ txt = Lident "option" }, [ inner_type ]) ->
+          make_omittable_codecs
+            (Codecs.generate_codecs generator_settings inner_type)
+      | _ -> codecs
     else codecs
   in
 

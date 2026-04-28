@@ -3,6 +3,7 @@
 
 let Spice = require("@mununki/ppx-spice/src/rescript/Spice.js");
 let Stdlib_Option = require("@rescript/runtime/lib/js/Stdlib_Option.js");
+let Stdlib_Result = require("@rescript/runtime/lib/js/Stdlib_Result.js");
 
 function language_encode(v) {
   return "ReScript";
@@ -30,7 +31,7 @@ function profile_encode(v) {
   let extra = v.languages;
   return Object.fromEntries(Spice.filterOptional([[
       "languages",
-      Spice.optionToJson(extra => Spice.arrayToJson(language_encode, extra), extra)
+      Spice.optionalToJson(extra => Spice.arrayToJson(language_encode, extra), extra)
     ]]));
 }
 
@@ -38,7 +39,7 @@ function profile_decode(v) {
   if (typeof v !== "object" || v === null || Array.isArray(v)) {
     return Spice.error(undefined, "Not an object", v);
   }
-  let languages = Stdlib_Option.getOr(Stdlib_Option.map(v["languages"], extra => Spice.optionFromJson(extra => Spice.arrayFromJson(language_decode, extra), extra)), {
+  let languages = Stdlib_Option.getOr(Stdlib_Option.map(v["languages"], json => Stdlib_Result.map(Spice.arrayFromJson(language_decode, json), v => v)), {
     TAG: "Ok",
     _0: undefined
   });

@@ -14,6 +14,9 @@ importers:
       '@mununki/ppx-spice':
         specifier: workspace:../
         version: link:..
+      '@rescript/runtime':
+        specifier: 12.0.0
+        version: 12.0.0
       onchange:
         specifier: ^7.1.0
         version: 7.1.0

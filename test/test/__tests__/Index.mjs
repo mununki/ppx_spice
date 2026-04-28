@@ -2,6 +2,7 @@
 
 import * as Dicts_test from "./spec/dicts_test.mjs";
 import * as Arrays_test from "./spec/arrays_test.mjs";
+import * as Tuples_test from "./spec/tuples_test.mjs";
 import * as Records_test from "./spec/records_test.mjs";
 import * as Results_test from "./spec/results_test.mjs";
 import * as Variants_test from "./spec/variants_test.mjs";

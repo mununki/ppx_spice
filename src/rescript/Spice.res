@@ -103,7 +103,13 @@ let filterOptional = arr =>
     }
   )
 
-let optionToJson = (encoder, opt): option<JSON.t> =>
+let optionToJson = (encoder, opt): JSON.t =>
+  switch opt {
+  | Some(x) => encoder(x)
+  | None => JSON.Null
+  }
+
+let optionalToJson = (encoder, opt): option<JSON.t> =>
   switch opt {
   | Some(x) => Some(encoder(x))
   | None => None

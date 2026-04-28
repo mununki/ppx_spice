@@ -229,6 +229,14 @@ function filterOptional(arr) {
 function optionToJson(encoder, opt) {
   if (opt !== undefined) {
     return encoder(Primitive_option.valFromOption(opt));
+  } else {
+    return null;
+  }
+}
+
+function optionalToJson(encoder, opt) {
+  if (opt !== undefined) {
+    return encoder(Primitive_option.valFromOption(opt));
   }
 }
 
@@ -440,6 +448,7 @@ export {
   listFromJson,
   filterOptional,
   optionToJson,
+  optionalToJson,
   optionFromJson,
   nullToJson,
   nullFromJson,

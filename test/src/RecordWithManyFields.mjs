@@ -2,6 +2,7 @@
 
 import * as Spice from "./Spice.mjs";
 import * as Stdlib_Option from "@rescript/runtime/lib/es6/Stdlib_Option.js";
+import * as Stdlib_Result from "@rescript/runtime/lib/es6/Stdlib_Result.js";
 
 function params_encode(v) {
   let extra = v.width;
@@ -22,63 +23,63 @@ function params_encode(v) {
   return Object.fromEntries(Spice.filterOptional([
     [
       "width",
-      Spice.optionToJson(Spice.floatToJson, extra)
+      Spice.optionalToJson(Spice.floatToJson, extra)
     ],
     [
       "height",
-      Spice.optionToJson(Spice.floatToJson, extra$1)
+      Spice.optionalToJson(Spice.floatToJson, extra$1)
     ],
     [
       "animation",
-      Spice.optionToJson(Spice.boolToJson, extra$2)
+      Spice.optionalToJson(Spice.boolToJson, extra$2)
     ],
     [
       "focusInput",
-      Spice.optionToJson(Spice.boolToJson, extra$3)
+      Spice.optionalToJson(Spice.boolToJson, extra$3)
     ],
     [
       "autoMapping",
-      Spice.optionToJson(Spice.boolToJson, extra$4)
+      Spice.optionalToJson(Spice.boolToJson, extra$4)
     ],
     [
       "shorthand",
-      Spice.optionToJson(Spice.boolToJson, extra$5)
+      Spice.optionalToJson(Spice.boolToJson, extra$5)
     ],
     [
       "pleaseReadGuide",
-      Spice.optionToJson(Spice.intToJson, extra$6)
+      Spice.optionalToJson(Spice.intToJson, extra$6)
     ],
     [
       "pleaseReadGuideTimer",
-      Spice.optionToJson(Spice.floatToJson, extra$7)
+      Spice.optionalToJson(Spice.floatToJson, extra$7)
     ],
     [
       "maxSuggestItems",
-      Spice.optionToJson(Spice.intToJson, extra$8)
+      Spice.optionalToJson(Spice.intToJson, extra$8)
     ],
     [
       "showMoreHName",
-      Spice.optionToJson(Spice.boolToJson, extra$9)
+      Spice.optionalToJson(Spice.boolToJson, extra$9)
     ],
     [
       "hideMapBtn",
-      Spice.optionToJson(Spice.boolToJson, extra$10)
+      Spice.optionalToJson(Spice.boolToJson, extra$10)
     ],
     [
       "hideEngBtn",
-      Spice.optionToJson(Spice.boolToJson, extra$11)
+      Spice.optionalToJson(Spice.boolToJson, extra$11)
     ],
     [
       "alwaysShowEngAddr",
-      Spice.optionToJson(Spice.boolToJson, extra$12)
+      Spice.optionalToJson(Spice.boolToJson, extra$12)
     ],
     [
       "useBannerLink",
-      Spice.optionToJson(Spice.boolToJson, extra$13)
+      Spice.optionalToJson(Spice.boolToJson, extra$13)
     ],
     [
       "submitMode",
-      Spice.optionToJson(Spice.boolToJson, extra$14)
+      Spice.optionalToJson(Spice.boolToJson, extra$14)
     ]
   ]));
 }
@@ -87,77 +88,77 @@ function params_decode(v) {
   if (typeof v !== "object" || v === null || Array.isArray(v)) {
     return Spice.error(undefined, "Not an object", v);
   }
-  let width = Stdlib_Option.getOr(Stdlib_Option.map(v["width"], extra => Spice.optionFromJson(Spice.floatFromJson, extra)), {
+  let width = Stdlib_Option.getOr(Stdlib_Option.map(v["width"], json => Stdlib_Result.map(Spice.floatFromJson(json), v => v)), {
     TAG: "Ok",
     _0: undefined
   });
   if (width.TAG === "Ok") {
-    let height = Stdlib_Option.getOr(Stdlib_Option.map(v["height"], extra => Spice.optionFromJson(Spice.floatFromJson, extra)), {
+    let height = Stdlib_Option.getOr(Stdlib_Option.map(v["height"], json => Stdlib_Result.map(Spice.floatFromJson(json), v => v)), {
       TAG: "Ok",
       _0: undefined
     });
     if (height.TAG === "Ok") {
-      let animation = Stdlib_Option.getOr(Stdlib_Option.map(v["animation"], extra => Spice.optionFromJson(Spice.boolFromJson, extra)), {
+      let animation = Stdlib_Option.getOr(Stdlib_Option.map(v["animation"], json => Stdlib_Result.map(Spice.boolFromJson(json), v => v)), {
         TAG: "Ok",
         _0: undefined
       });
       if (animation.TAG === "Ok") {
-        let focusInput = Stdlib_Option.getOr(Stdlib_Option.map(v["focusInput"], extra => Spice.optionFromJson(Spice.boolFromJson, extra)), {
+        let focusInput = Stdlib_Option.getOr(Stdlib_Option.map(v["focusInput"], json => Stdlib_Result.map(Spice.boolFromJson(json), v => v)), {
           TAG: "Ok",
           _0: undefined
         });
         if (focusInput.TAG === "Ok") {
-          let autoMapping = Stdlib_Option.getOr(Stdlib_Option.map(v["autoMapping"], extra => Spice.optionFromJson(Spice.boolFromJson, extra)), {
+          let autoMapping = Stdlib_Option.getOr(Stdlib_Option.map(v["autoMapping"], json => Stdlib_Result.map(Spice.boolFromJson(json), v => v)), {
             TAG: "Ok",
             _0: undefined
           });
           if (autoMapping.TAG === "Ok") {
-            let shorthand = Stdlib_Option.getOr(Stdlib_Option.map(v["shorthand"], extra => Spice.optionFromJson(Spice.boolFromJson, extra)), {
+            let shorthand = Stdlib_Option.getOr(Stdlib_Option.map(v["shorthand"], json => Stdlib_Result.map(Spice.boolFromJson(json), v => v)), {
               TAG: "Ok",
               _0: undefined
             });
             if (shorthand.TAG === "Ok") {
-              let pleaseReadGuide = Stdlib_Option.getOr(Stdlib_Option.map(v["pleaseReadGuide"], extra => Spice.optionFromJson(Spice.intFromJson, extra)), {
+              let pleaseReadGuide = Stdlib_Option.getOr(Stdlib_Option.map(v["pleaseReadGuide"], json => Stdlib_Result.map(Spice.intFromJson(json), v => v)), {
                 TAG: "Ok",
                 _0: undefined
               });
               if (pleaseReadGuide.TAG === "Ok") {
-                let pleaseReadGuideTimer = Stdlib_Option.getOr(Stdlib_Option.map(v["pleaseReadGuideTimer"], extra => Spice.optionFromJson(Spice.floatFromJson, extra)), {
+                let pleaseReadGuideTimer = Stdlib_Option.getOr(Stdlib_Option.map(v["pleaseReadGuideTimer"], json => Stdlib_Result.map(Spice.floatFromJson(json), v => v)), {
                   TAG: "Ok",
                   _0: undefined
                 });
                 if (pleaseReadGuideTimer.TAG === "Ok") {
-                  let maxSuggestItems = Stdlib_Option.getOr(Stdlib_Option.map(v["maxSuggestItems"], extra => Spice.optionFromJson(Spice.intFromJson, extra)), {
+                  let maxSuggestItems = Stdlib_Option.getOr(Stdlib_Option.map(v["maxSuggestItems"], json => Stdlib_Result.map(Spice.intFromJson(json), v => v)), {
                     TAG: "Ok",
                     _0: undefined
                   });
                   if (maxSuggestItems.TAG === "Ok") {
-                    let showMoreHName = Stdlib_Option.getOr(Stdlib_Option.map(v["showMoreHName"], extra => Spice.optionFromJson(Spice.boolFromJson, extra)), {
+                    let showMoreHName = Stdlib_Option.getOr(Stdlib_Option.map(v["showMoreHName"], json => Stdlib_Result.map(Spice.boolFromJson(json), v => v)), {
                       TAG: "Ok",
                       _0: undefined
                     });
                     if (showMoreHName.TAG === "Ok") {
-                      let hideMapBtn = Stdlib_Option.getOr(Stdlib_Option.map(v["hideMapBtn"], extra => Spice.optionFromJson(Spice.boolFromJson, extra)), {
+                      let hideMapBtn = Stdlib_Option.getOr(Stdlib_Option.map(v["hideMapBtn"], json => Stdlib_Result.map(Spice.boolFromJson(json), v => v)), {
                         TAG: "Ok",
                         _0: undefined
                       });
                       if (hideMapBtn.TAG === "Ok") {
-                        let hideEngBtn = Stdlib_Option.getOr(Stdlib_Option.map(v["hideEngBtn"], extra => Spice.optionFromJson(Spice.boolFromJson, extra)), {
+                        let hideEngBtn = Stdlib_Option.getOr(Stdlib_Option.map(v["hideEngBtn"], json => Stdlib_Result.map(Spice.boolFromJson(json), v => v)), {
                           TAG: "Ok",
                           _0: undefined
                         });
                         if (hideEngBtn.TAG === "Ok") {
-                          let alwaysShowEngAddr = Stdlib_Option.getOr(Stdlib_Option.map(v["alwaysShowEngAddr"], extra => Spice.optionFromJson(Spice.boolFromJson, extra)), {
+                          let alwaysShowEngAddr = Stdlib_Option.getOr(Stdlib_Option.map(v["alwaysShowEngAddr"], json => Stdlib_Result.map(Spice.boolFromJson(json), v => v)), {
                             TAG: "Ok",
                             _0: undefined
                           });
                           if (alwaysShowEngAddr.TAG === "Ok") {
-                            let useBannerLink = Stdlib_Option.getOr(Stdlib_Option.map(v["useBannerLink"], extra => Spice.optionFromJson(Spice.boolFromJson, extra)), {
+                            let useBannerLink = Stdlib_Option.getOr(Stdlib_Option.map(v["useBannerLink"], json => Stdlib_Result.map(Spice.boolFromJson(json), v => v)), {
                               TAG: "Ok",
                               _0: undefined
                             });
                             if (useBannerLink.TAG === "Ok") {
-                              let submitMode = Stdlib_Option.getOr(Stdlib_Option.map(v["submitMode"], extra => Spice.optionFromJson(Spice.boolFromJson, extra)), {
+                              let submitMode = Stdlib_Option.getOr(Stdlib_Option.map(v["submitMode"], json => Stdlib_Result.map(Spice.boolFromJson(json), v => v)), {
                                 TAG: "Ok",
                                 _0: undefined
                               });
