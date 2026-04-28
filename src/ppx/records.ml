@@ -145,12 +145,12 @@ let make_omittable_codecs codecs =
   | Some encode, Some decode ->
       ( Some
           (add_attrs [ Utils.attr_partial ]
-             [%expr Spice.optionalToJson [%e encode]]),
+             [%expr Spice.optionToJson [%e encode]]),
         Some (wrap_decoder_with_some decode) )
   | Some encode, None ->
       ( Some
           (add_attrs [ Utils.attr_partial ]
-             [%expr Spice.optionalToJson [%e encode]]),
+             [%expr Spice.optionToJson [%e encode]]),
         None )
   | None, Some decode -> (None, Some (wrap_decoder_with_some decode))
   | None, None -> codecs
@@ -176,7 +176,7 @@ let parse_decl generator_settings
     |> List.exists (function Ok (Some _) -> true | _ -> false)
   in
   let is_option = Utils.check_option_type pld_type in
-  let codecs = Codecs.generate_codecs generator_settings pld_type in
+  let codecs = Codecs.generate_value_codecs generator_settings pld_type in
   let codecs =
     if is_optional then
       make_omittable_codecs codecs
@@ -184,7 +184,7 @@ let parse_decl generator_settings
       match pld_type.ptyp_desc with
       | Ptyp_constr ({ txt = Lident "option" }, [ inner_type ]) ->
           make_omittable_codecs
-            (Codecs.generate_codecs generator_settings inner_type)
+            (Codecs.generate_value_codecs generator_settings inner_type)
       | _ -> codecs
     else codecs
   in

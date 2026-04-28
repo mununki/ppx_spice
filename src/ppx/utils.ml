@@ -4,6 +4,7 @@ open Ast_helper
 
 let annotation_name = "spice"
 let encoder_func_suffix = "_encode"
+let value_encoder_func_suffix = "_encodeJson"
 let decoder_func_suffix = "_decode"
 let encoder_var_prefix = "encoder_"
 let decoder_var_prefix = "decoder_"
@@ -30,6 +31,9 @@ let get_attribute_by_name attributes name =
 
 type generator_settings = { do_encode : bool; do_decode : bool }
 
+let make_generator_settings ~do_encode ~do_decode =
+  { do_encode; do_decode }
+
 let get_generator_settings_from_attributes attributes =
   match get_attribute_by_name attributes annotation_name with
   | Ok None -> (
@@ -38,15 +42,16 @@ let get_generator_settings_from_attributes attributes =
           get_attribute_by_name attributes (annotation_name ^ ".encode") )
       with
       | Ok (Some _), Ok (Some _) ->
-          Ok (Some { do_encode = true; do_decode = true })
+          Ok (Some (make_generator_settings ~do_encode:true ~do_decode:true))
       | Ok (Some _), Ok None ->
-          Ok (Some { do_encode = false; do_decode = true })
+          Ok (Some (make_generator_settings ~do_encode:false ~do_decode:true))
       | Ok None, Ok (Some _) ->
-          Ok (Some { do_encode = true; do_decode = false })
+          Ok (Some (make_generator_settings ~do_encode:true ~do_decode:false))
       | Ok None, Ok None -> Ok None
       | (Error _ as e), _ -> e
       | _, (Error _ as e) -> e)
-  | Ok (Some _) -> Ok (Some { do_encode = true; do_decode = true })
+  | Ok (Some _) ->
+      Ok (Some (make_generator_settings ~do_encode:true ~do_decode:true))
   | Error _ as e -> e
 
 let get_expression_from_payload { attr_name = { loc }; attr_payload = payload }
@@ -146,3 +151,12 @@ let check_option_type { ptyp_desc } =
   match ptyp_desc with
   | Ptyp_constr ({ txt = Lident "option" }, [ _ ]) -> true
   | _ -> false
+
+let get_default_option_inner_type { ptyp_desc; ptyp_attributes } =
+  match get_attribute_by_name ptyp_attributes "spice.codec" with
+  | Ok None -> (
+      match ptyp_desc with
+      | Ptyp_constr ({ txt = Lident "option" }, [ inner_type ]) ->
+          Some inner_type
+      | _ -> None)
+  | _ -> None

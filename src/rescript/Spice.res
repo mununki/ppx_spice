@@ -103,16 +103,16 @@ let filterOptional = arr =>
     }
   )
 
-let optionToJson = (encoder, opt): JSON.t =>
-  switch opt {
-  | Some(x) => encoder(x)
-  | None => JSON.Null
-  }
-
-let optionalToJson = (encoder, opt): option<JSON.t> =>
+let optionToJson = (encoder, opt): option<JSON.t> =>
   switch opt {
   | Some(x) => Some(encoder(x))
   | None => None
+  }
+
+let optionToNullableJson = (encoder, opt): JSON.t =>
+  switch opt {
+  | Some(x) => encoder(x)
+  | None => JSON.Null
   }
 
 let optionFromJson = (decoder, json) =>
@@ -161,6 +161,13 @@ let resultFromJson = (okDecoder, errorDecoder, json) =>
 
 let dictToJson = (encoder, dict): JSON.t => JSON.Object(Dict.mapValues(dict, encoder))
 
+let dictOptionalToJson = (encoder, dict): JSON.t =>
+  JSON.Object(
+    Dict.fromArray(
+      filterOptional(Array.map(Dict.toArray(dict), ((key, value)) => (key, encoder(value)))),
+    ),
+  )
+
 let dictFromJson = (decoder, json) =>
   switch (json: JSON.t) {
   | JSON.Object(dict) =>
@@ -189,6 +196,6 @@ module Codecs = {
   let bool = (boolToJson, boolFromJson)
   let array = (arrayToJson, arrayFromJson)
   let list = (listToJson, listFromJson)
-  let option = (optionToJson, optionFromJson)
+  let option = (optionToNullableJson, optionFromJson)
   let unit = (unitToJson, unitFromJson)
 }

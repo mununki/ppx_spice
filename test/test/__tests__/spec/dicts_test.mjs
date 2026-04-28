@@ -105,6 +105,35 @@ Zora.test("Dict.t<string>", t => {
   });
 });
 
+Zora.test("dict<option<string>>", t => {
+  let data = {
+    present: "value",
+    missing: undefined
+  };
+  let encoded = Dicts.optionStringDict_encode(data);
+  testEqual(t, "encode omits None values", encoded, {
+    present: "value"
+  });
+  let decoded = Dicts.optionStringDict_decode({
+    present: "value",
+    missing: null
+  });
+  t.test("decode present null values as None", async t => {
+    if (decoded.TAG === "Ok") {
+      let dict = decoded._0;
+      t.equal(dict["present"], "value", "present");
+      let hasOwnProperty = ((obj, key) => Object.prototype.hasOwnProperty.call(obj, key));
+      let getValue = ((obj, key) => obj[key]);
+      let hasMissing = hasOwnProperty(dict, "missing");
+      let missingValue = getValue(dict, "missing");
+      t.equal(hasMissing, true, "missing key is present");
+      t.equal(missingValue, undefined, "missing");
+      return;
+    }
+    t.fail("expected decode to succeed");
+  });
+});
+
 export {
   testEqual,
 }

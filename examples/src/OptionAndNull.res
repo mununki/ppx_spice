@@ -12,6 +12,9 @@ type nameParts = (string, option<string>)
 @spice
 type event = Renamed(option<string>)
 
+@spice
+type maybeName = option<string>
+
 let profileWithoutOptionalValues: profile = {
   name: "Alice",
   nickname: None,
@@ -60,3 +63,7 @@ let eventWithNoneJson: JSON.t = eventWithNone->event_encode
 let eventNullPayload = %raw(`["Renamed", null]`)
 let eventNullPayloadResult: result<event, Spice.decodeError> =
   eventNullPayload->event_decode
+
+let topLevelSomeJson: option<JSON.t> = Some("Alice")->maybeName_encode
+
+let topLevelNoneJson: option<JSON.t> = None->maybeName_encode

@@ -34,107 +34,242 @@ function t_encode(v) {
   return Object.fromEntries(Spice.filterOptional([
     [
       "f1",
-      Spice.optionalToJson(Spice.stringToJson, extra)
+      Spice.optionToJson(Spice.stringToJson, extra)
     ],
     [
       "f2",
-      Spice.optionalToJson(Spice.stringToJson, extra$1)
+      Spice.optionToJson(Spice.stringToJson, extra$1)
     ],
     [
       "f3",
-      Spice.optionalToJson(Spice.stringToJson, extra$2)
+      Spice.optionToJson(Spice.stringToJson, extra$2)
     ],
     [
       "f4",
-      Spice.optionalToJson(Spice.stringToJson, extra$3)
+      Spice.optionToJson(Spice.stringToJson, extra$3)
     ],
     [
       "f5",
-      Spice.optionalToJson(Spice.stringToJson, extra$4)
+      Spice.optionToJson(Spice.stringToJson, extra$4)
     ],
     [
       "f6",
-      Spice.optionalToJson(Spice.stringToJson, extra$5)
+      Spice.optionToJson(Spice.stringToJson, extra$5)
     ],
     [
       "f7",
-      Spice.optionalToJson(Spice.stringToJson, extra$6)
+      Spice.optionToJson(Spice.stringToJson, extra$6)
     ],
     [
       "f8",
-      Spice.optionalToJson(Spice.stringToJson, extra$7)
+      Spice.optionToJson(Spice.stringToJson, extra$7)
     ],
     [
       "f9",
-      Spice.optionalToJson(Spice.stringToJson, extra$8)
+      Spice.optionToJson(Spice.stringToJson, extra$8)
     ],
     [
       "f10",
-      Spice.optionalToJson(Spice.stringToJson, extra$9)
+      Spice.optionToJson(Spice.stringToJson, extra$9)
     ],
     [
       "f11",
-      Spice.optionalToJson(Spice.stringToJson, extra$10)
+      Spice.optionToJson(Spice.stringToJson, extra$10)
     ],
     [
       "f12",
-      Spice.optionalToJson(Spice.stringToJson, extra$11)
+      Spice.optionToJson(Spice.stringToJson, extra$11)
     ],
     [
       "f13",
-      Spice.optionalToJson(Spice.stringToJson, extra$12)
+      Spice.optionToJson(Spice.stringToJson, extra$12)
     ],
     [
       "f14",
-      Spice.optionalToJson(Spice.stringToJson, extra$13)
+      Spice.optionToJson(Spice.stringToJson, extra$13)
     ],
     [
       "f15",
-      Spice.optionalToJson(Spice.stringToJson, extra$14)
+      Spice.optionToJson(Spice.stringToJson, extra$14)
     ],
     [
       "f16",
-      Spice.optionalToJson(Spice.stringToJson, extra$15)
+      Spice.optionToJson(Spice.stringToJson, extra$15)
     ],
     [
       "f17",
-      Spice.optionalToJson(Spice.stringToJson, extra$16)
+      Spice.optionToJson(Spice.stringToJson, extra$16)
     ],
     [
       "f18",
-      Spice.optionalToJson(Spice.stringToJson, extra$17)
+      Spice.optionToJson(Spice.stringToJson, extra$17)
     ],
     [
       "f19",
-      Spice.optionalToJson(Spice.stringToJson, extra$18)
+      Spice.optionToJson(Spice.stringToJson, extra$18)
     ],
     [
       "f20",
-      Spice.optionalToJson(Spice.stringToJson, extra$19)
+      Spice.optionToJson(Spice.stringToJson, extra$19)
     ],
     [
       "f21",
-      Spice.optionalToJson(Spice.stringToJson, extra$20)
+      Spice.optionToJson(Spice.stringToJson, extra$20)
     ],
     [
       "f22",
-      Spice.optionalToJson(Spice.stringToJson, extra$21)
+      Spice.optionToJson(Spice.stringToJson, extra$21)
     ],
     [
       "f23",
-      Spice.optionalToJson(Spice.stringToJson, extra$22)
+      Spice.optionToJson(Spice.stringToJson, extra$22)
     ],
     [
       "f24",
-      Spice.optionalToJson(Spice.stringToJson, extra$23)
+      Spice.optionToJson(Spice.stringToJson, extra$23)
     ],
     [
       "f25",
-      Spice.optionalToJson(Spice.stringToJson, extra$24)
+      Spice.optionToJson(Spice.stringToJson, extra$24)
     ],
     [
       "f26",
-      Spice.optionalToJson(Spice.stringToJson, extra$25)
+      Spice.optionToJson(Spice.stringToJson, extra$25)
+    ]
+  ]));
+}
+
+function t_encodeJson(v) {
+  let extra = v.f1;
+  let extra$1 = v.f2;
+  let extra$2 = v.f3;
+  let extra$3 = v.f4;
+  let extra$4 = v.f5;
+  let extra$5 = v.f6;
+  let extra$6 = v.f7;
+  let extra$7 = v.f8;
+  let extra$8 = v.f9;
+  let extra$9 = v.f10;
+  let extra$10 = v.f11;
+  let extra$11 = v.f12;
+  let extra$12 = v.f13;
+  let extra$13 = v.f14;
+  let extra$14 = v.f15;
+  let extra$15 = v.f16;
+  let extra$16 = v.f17;
+  let extra$17 = v.f18;
+  let extra$18 = v.f19;
+  let extra$19 = v.f20;
+  let extra$20 = v.f21;
+  let extra$21 = v.f22;
+  let extra$22 = v.f23;
+  let extra$23 = v.f24;
+  let extra$24 = v.f25;
+  let extra$25 = v.f26;
+  return Object.fromEntries(Spice.filterOptional([
+    [
+      "f1",
+      Spice.optionToJson(Spice.stringToJson, extra)
+    ],
+    [
+      "f2",
+      Spice.optionToJson(Spice.stringToJson, extra$1)
+    ],
+    [
+      "f3",
+      Spice.optionToJson(Spice.stringToJson, extra$2)
+    ],
+    [
+      "f4",
+      Spice.optionToJson(Spice.stringToJson, extra$3)
+    ],
+    [
+      "f5",
+      Spice.optionToJson(Spice.stringToJson, extra$4)
+    ],
+    [
+      "f6",
+      Spice.optionToJson(Spice.stringToJson, extra$5)
+    ],
+    [
+      "f7",
+      Spice.optionToJson(Spice.stringToJson, extra$6)
+    ],
+    [
+      "f8",
+      Spice.optionToJson(Spice.stringToJson, extra$7)
+    ],
+    [
+      "f9",
+      Spice.optionToJson(Spice.stringToJson, extra$8)
+    ],
+    [
+      "f10",
+      Spice.optionToJson(Spice.stringToJson, extra$9)
+    ],
+    [
+      "f11",
+      Spice.optionToJson(Spice.stringToJson, extra$10)
+    ],
+    [
+      "f12",
+      Spice.optionToJson(Spice.stringToJson, extra$11)
+    ],
+    [
+      "f13",
+      Spice.optionToJson(Spice.stringToJson, extra$12)
+    ],
+    [
+      "f14",
+      Spice.optionToJson(Spice.stringToJson, extra$13)
+    ],
+    [
+      "f15",
+      Spice.optionToJson(Spice.stringToJson, extra$14)
+    ],
+    [
+      "f16",
+      Spice.optionToJson(Spice.stringToJson, extra$15)
+    ],
+    [
+      "f17",
+      Spice.optionToJson(Spice.stringToJson, extra$16)
+    ],
+    [
+      "f18",
+      Spice.optionToJson(Spice.stringToJson, extra$17)
+    ],
+    [
+      "f19",
+      Spice.optionToJson(Spice.stringToJson, extra$18)
+    ],
+    [
+      "f20",
+      Spice.optionToJson(Spice.stringToJson, extra$19)
+    ],
+    [
+      "f21",
+      Spice.optionToJson(Spice.stringToJson, extra$20)
+    ],
+    [
+      "f22",
+      Spice.optionToJson(Spice.stringToJson, extra$21)
+    ],
+    [
+      "f23",
+      Spice.optionToJson(Spice.stringToJson, extra$22)
+    ],
+    [
+      "f24",
+      Spice.optionToJson(Spice.stringToJson, extra$23)
+    ],
+    [
+      "f25",
+      Spice.optionToJson(Spice.stringToJson, extra$24)
+    ],
+    [
+      "f26",
+      Spice.optionToJson(Spice.stringToJson, extra$25)
     ]
   ]));
 }
@@ -386,6 +521,7 @@ function t_decode(v) {
 
 export {
   t_encode,
+  t_encodeJson,
   t_decode,
 }
 /* No side effect */

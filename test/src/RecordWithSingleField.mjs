@@ -11,6 +11,13 @@ function t_encode(v) {
     ]]));
 }
 
+function t_encodeJson(v) {
+  return Object.fromEntries(Spice.filterOptional([[
+      "a",
+      Spice.stringToJson(v.a)
+    ]]));
+}
+
 function t_decode(v) {
   if (typeof v !== "object" || v === null || Array.isArray(v)) {
     return Spice.error(undefined, "Not an object", v);
@@ -30,6 +37,7 @@ function t_decode(v) {
 
 let M = {
   t_encode: t_encode,
+  t_encodeJson: t_encodeJson,
   t_decode: t_decode
 };
 
@@ -39,11 +47,26 @@ function response_encode(v) {
   return Object.fromEntries(Spice.filterOptional([
     [
       "data",
-      Spice.optionalToJson(v => v, extra)
+      Spice.optionToJson(v => v, extra)
     ],
     [
       "errors",
-      Spice.optionalToJson(extra => Spice.arrayToJson(t_encode, extra), extra$1)
+      Spice.optionToJson(extra => Spice.arrayToJson(t_encodeJson, extra), extra$1)
+    ]
+  ]));
+}
+
+function response_encodeJson(v) {
+  let extra = v.data;
+  let extra$1 = v.errors;
+  return Object.fromEntries(Spice.filterOptional([
+    [
+      "data",
+      Spice.optionToJson(v => v, extra)
+    ],
+    [
+      "errors",
+      Spice.optionToJson(extra => Spice.arrayToJson(t_encodeJson, extra), extra$1)
     ]
   ]));
 }
@@ -83,6 +106,7 @@ function response_decode(v) {
 export {
   M,
   response_encode,
+  response_encodeJson,
   response_decode,
 }
 /* No side effect */

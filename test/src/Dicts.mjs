@@ -7,6 +7,10 @@ function stringDict_encode(v) {
   return Spice.dictToJson(Spice.stringToJson, v);
 }
 
+function stringDict_encodeJson(v) {
+  return Spice.dictToJson(Spice.stringToJson, v);
+}
+
 function stringDict_decode(v) {
   return Spice.dictFromJson(Spice.stringFromJson, v);
 }
@@ -15,11 +19,28 @@ function intDict_encode(v) {
   return Spice.dictToJson(Spice.intToJson, v);
 }
 
+function intDict_encodeJson(v) {
+  return Spice.dictToJson(Spice.intToJson, v);
+}
+
 function intDict_decode(v) {
   return Spice.dictFromJson(Spice.intFromJson, v);
 }
 
 function inner_encode(v) {
+  return Object.fromEntries(Spice.filterOptional([
+    [
+      "id",
+      Spice.intToJson(v.id)
+    ],
+    [
+      "name",
+      Spice.stringToJson(v.name)
+    ]
+  ]));
+}
+
+function inner_encodeJson(v) {
   return Object.fromEntries(Spice.filterOptional([
     [
       "id",
@@ -56,7 +77,11 @@ function inner_decode(v) {
 }
 
 function innerDict_encode(v) {
-  return Spice.dictToJson(inner_encode, v);
+  return Spice.dictToJson(inner_encodeJson, v);
+}
+
+function innerDict_encodeJson(v) {
+  return Spice.dictToJson(inner_encodeJson, v);
 }
 
 function innerDict_decode(v) {
@@ -67,20 +92,44 @@ function dictT_encode(v) {
   return Spice.dictToJson(Spice.stringToJson, v);
 }
 
+function dictT_encodeJson(v) {
+  return Spice.dictToJson(Spice.stringToJson, v);
+}
+
 function dictT_decode(v) {
   return Spice.dictFromJson(Spice.stringFromJson, v);
 }
 
+function optionStringDict_encode(v) {
+  return Spice.dictOptionalToJson(extra => Spice.optionToJson(Spice.stringToJson, extra), v);
+}
+
+function optionStringDict_encodeJson(v) {
+  return Spice.dictOptionalToJson(extra => Spice.optionToJson(Spice.stringToJson, extra), v);
+}
+
+function optionStringDict_decode(v) {
+  return Spice.dictFromJson(extra => Spice.optionFromJson(Spice.stringFromJson, extra), v);
+}
+
 export {
   stringDict_encode,
+  stringDict_encodeJson,
   stringDict_decode,
   intDict_encode,
+  intDict_encodeJson,
   intDict_decode,
   inner_encode,
+  inner_encodeJson,
   inner_decode,
   innerDict_encode,
+  innerDict_encodeJson,
   innerDict_decode,
   dictT_encode,
+  dictT_encodeJson,
   dictT_decode,
+  optionStringDict_encode,
+  optionStringDict_encodeJson,
+  optionStringDict_decode,
 }
 /* No side effect */

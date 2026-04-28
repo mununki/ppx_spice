@@ -94,7 +94,11 @@ let data = %raw(`
 
 In records, `option<T>` fields and optional fields encode `None` by omitting the object key. A missing key decodes to `None`. A present JSON `null` is decoded by `T`; for example, `option<string>` fails on `null` because `string` cannot decode `null`. Use `Null.t<T>` when a present JSON `null` is a valid value.
 
-In tuples and variant payloads, `option<T>` is a fixed-position JSON value. `None` encodes as JSON `null`, and JSON `null` decodes as `None`.
+In tuples, variant payloads, arrays, lists, and result payloads, `option<T>` is a fixed-position JSON value. `None` encodes as JSON `null`, and JSON `null` decodes as `None`.
+
+For a top-level `option<T>` type alias, the encoder returns `option<JSON.t>`. `Some(value)` encodes to `Some(json)`, while `None` encodes to `None`.
+
+For `dict<option<T>>`, `None` values are omitted from the JSON object. A present JSON `null` value decodes as `None`.
 
 ### Advanced Usage
 

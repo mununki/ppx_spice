@@ -18,6 +18,19 @@ function t_encode(v) {
   ]));
 }
 
+function t_encodeJson(v) {
+  return Object.fromEntries(Spice.filterOptional([
+    [
+      "spice-label",
+      Spice.stringToJson(v.label)
+    ],
+    [
+      "spice-value",
+      Spice.intToJson(v.value)
+    ]
+  ]));
+}
+
 function t_decode(v) {
   if (typeof v !== "object" || v === null || Array.isArray(v)) {
     return Spice.error(undefined, "Not an object", v);
@@ -42,6 +55,19 @@ function t_decode(v) {
 }
 
 function t1_encode(v) {
+  return Object.fromEntries(Spice.filterOptional([
+    [
+      "label",
+      Spice.stringToJson(v.label)
+    ],
+    [
+      "value",
+      Spice.intToJson(v.value)
+    ]
+  ]));
+}
+
+function t1_encodeJson(v) {
   return Object.fromEntries(Spice.filterOptional([
     [
       "label",
@@ -83,11 +109,26 @@ function tOp_encode(v) {
   return Object.fromEntries(Spice.filterOptional([
     [
       "label",
-      Spice.optionalToJson(Spice.stringToJson, extra)
+      Spice.optionToJson(Spice.stringToJson, extra)
     ],
     [
       "value",
-      Spice.optionalToJson(Spice.intToJson, extra$1)
+      Spice.optionToJson(Spice.intToJson, extra$1)
+    ]
+  ]));
+}
+
+function tOp_encodeJson(v) {
+  let extra = v.label;
+  let extra$1 = v.value;
+  return Object.fromEntries(Spice.filterOptional([
+    [
+      "label",
+      Spice.optionToJson(Spice.stringToJson, extra)
+    ],
+    [
+      "value",
+      Spice.optionToJson(Spice.intToJson, extra$1)
     ]
   ]));
 }
@@ -129,7 +170,7 @@ function t2_encode(v) {
   return Object.fromEntries(Spice.filterOptional([
     [
       "o",
-      Spice.optionalToJson(Spice.stringToJson, extra)
+      Spice.optionToJson(Spice.stringToJson, extra)
     ],
     [
       "n",
@@ -137,7 +178,32 @@ function t2_encode(v) {
     ],
     [
       "on",
-      Spice.optionalToJson(extra => Spice.nullToJson(Spice.stringToJson, extra), extra$2)
+      Spice.optionToJson(extra => Spice.nullToJson(Spice.stringToJson, extra), extra$2)
+    ],
+    [
+      "n2",
+      Spice.nullToJson(Spice.stringToJson, extra$3)
+    ]
+  ]));
+}
+
+function t2_encodeJson(v) {
+  let extra = v.o;
+  let extra$1 = v.n;
+  let extra$2 = v.on;
+  let extra$3 = v.n2;
+  return Object.fromEntries(Spice.filterOptional([
+    [
+      "o",
+      Spice.optionToJson(Spice.stringToJson, extra)
+    ],
+    [
+      "n",
+      Spice.nullToJson(Spice.stringToJson, extra$1)
+    ],
+    [
+      "on",
+      Spice.optionToJson(extra => Spice.nullToJson(Spice.stringToJson, extra), extra$2)
     ],
     [
       "n2",
@@ -196,7 +262,21 @@ function t3_encode(v) {
     ],
     [
       "value2",
-      Spice.optionalToJson(Spice.intToJson, extra)
+      Spice.optionToJson(Spice.intToJson, extra)
+    ]
+  ]));
+}
+
+function t3_encodeJson(v) {
+  let extra = v.value2;
+  return Object.fromEntries(Spice.filterOptional([
+    [
+      "value",
+      Spice.intToJson(v.value)
+    ],
+    [
+      "value2",
+      Spice.optionToJson(Spice.intToJson, extra)
     ]
   ]));
 }
@@ -240,11 +320,30 @@ function t4_encode(v) {
     ],
     [
       "b",
-      Spice.optionalToJson(Spice.bigintToJson, extra)
+      Spice.optionToJson(Spice.bigintToJson, extra)
     ],
     [
       "c",
-      Spice.optionalToJson(Spice.bigintToJson, extra$1)
+      Spice.optionToJson(Spice.bigintToJson, extra$1)
+    ]
+  ]));
+}
+
+function t4_encodeJson(v) {
+  let extra = v.b;
+  let extra$1 = v.c;
+  return Object.fromEntries(Spice.filterOptional([
+    [
+      "a",
+      Spice.bigintToJson(v.a)
+    ],
+    [
+      "b",
+      Spice.optionToJson(Spice.bigintToJson, extra)
+    ],
+    [
+      "c",
+      Spice.optionToJson(Spice.bigintToJson, extra$1)
     ]
   ]));
 }
@@ -288,7 +387,15 @@ function t5_encode(v) {
   let extra = v.maybeNull;
   return Object.fromEntries(Spice.filterOptional([[
       "maybeNull",
-      Spice.optionalToJson(extra => Spice.nullToJson(Spice.stringToJson, extra), extra)
+      Spice.optionToJson(extra => Spice.nullToJson(Spice.stringToJson, extra), extra)
+    ]]));
+}
+
+function t5_encodeJson(v) {
+  let extra = v.maybeNull;
+  return Object.fromEntries(Spice.filterOptional([[
+      "maybeNull",
+      Spice.optionToJson(extra => Spice.nullToJson(Spice.stringToJson, extra), extra)
     ]]));
 }
 
@@ -365,18 +472,25 @@ function deeplyNested_decode(v) {
 
 export {
   t_encode,
+  t_encodeJson,
   t_decode,
   t1_encode,
+  t1_encodeJson,
   t1_decode,
   tOp_encode,
+  tOp_encodeJson,
   tOp_decode,
   t2_encode,
+  t2_encodeJson,
   t2_decode,
   t3_encode,
+  t3_encodeJson,
   t3_decode,
   t4_encode,
+  t4_encodeJson,
   t4_decode,
   t5_encode,
+  t5_encodeJson,
   t5_decode,
   inner_decode,
   outer_decode,

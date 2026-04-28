@@ -70,3 +70,40 @@ zoraBlock("Dict.t<string>", t => {
   t->testEqual("decode Dict.t", decoded, Ok(data))
 })
 
+zoraBlock("dict<option<string>>", t => {
+  let data: Dicts.optionStringDict = dict{
+    "present": Some("value"),
+    "missing": None,
+  }
+  let encoded = data->Dicts.optionStringDict_encode
+  t->testEqual(
+    "encode omits None values",
+    encoded,
+    JSON.Object(dict{"present": JSON.String("value")}),
+  )
+
+  let decoded =
+    JSON.Object(dict{
+      "present": JSON.String("value"),
+      "missing": JSON.Null,
+    })->Dicts.optionStringDict_decode
+
+  t->test("decode present null values as None", async t => {
+    switch decoded {
+    | Ok(dict) => {
+        t->equal(dict->Dict.get("present"), Some(Some("value")), "present")
+        let hasOwnProperty: (Dicts.optionStringDict, string) => bool = %raw(
+          `(obj, key) => Object.prototype.hasOwnProperty.call(obj, key)`
+        )
+        let getValue: (Dicts.optionStringDict, string) => option<string> = %raw(
+          `(obj, key) => obj[key]`
+        )
+        let hasMissing = hasOwnProperty(dict, "missing")
+        let missingValue = getValue(dict, "missing")
+        t->equal(hasMissing, true, "missing key is present")
+        t->equal(missingValue, None, "missing")
+      }
+    | Error(_) => t->fail("expected decode to succeed")
+    }
+  })
+})

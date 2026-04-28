@@ -13,7 +13,21 @@ function t0_encode(v) {
     ],
     [
       "b",
-      Spice.optionalToJson(Spice.intToJson, extra)
+      Spice.optionToJson(Spice.intToJson, extra)
+    ]
+  ]));
+}
+
+function t0_encodeJson(v) {
+  let extra = v.b;
+  return Object.fromEntries(Spice.filterOptional([
+    [
+      "a",
+      Spice.intToJson(v.a)
+    ],
+    [
+      "b",
+      Spice.optionToJson(Spice.intToJson, extra)
     ]
   ]));
 }
@@ -53,7 +67,21 @@ function t1_encode(v) {
     ],
     [
       "bs",
-      Spice.optionalToJson(extra => Spice.arrayToJson(Spice.intToJson, extra), extra)
+      Spice.optionToJson(extra => Spice.arrayToJson(Spice.intToJson, extra), extra)
+    ]
+  ]));
+}
+
+function t1_encodeJson(v) {
+  let extra = v.bs;
+  return Object.fromEntries(Spice.filterOptional([
+    [
+      "a",
+      Spice.intToJson(v.a)
+    ],
+    [
+      "bs",
+      Spice.optionToJson(extra => Spice.arrayToJson(Spice.intToJson, extra), extra)
     ]
   ]));
 }
@@ -85,6 +113,17 @@ function t1_decode(v) {
 }
 
 function b_encode(v) {
+  switch (v) {
+    case "B0" :
+      return "B0";
+    case "B1" :
+      return "B1";
+    case "B2" :
+      return "B2";
+  }
+}
+
+function b_encodeJson(v) {
   switch (v) {
     case "B0" :
       return "B0";
@@ -132,7 +171,21 @@ function t2_encode(v) {
     ],
     [
       "bs",
-      Spice.optionalToJson(extra => Spice.arrayToJson(b_encode, extra), extra)
+      Spice.optionToJson(extra => Spice.arrayToJson(b_encodeJson, extra), extra)
+    ]
+  ]));
+}
+
+function t2_encodeJson(v) {
+  let extra = v.bs;
+  return Object.fromEntries(Spice.filterOptional([
+    [
+      "a",
+      Spice.intToJson(v.a)
+    ],
+    [
+      "bs",
+      Spice.optionToJson(extra => Spice.arrayToJson(b_encodeJson, extra), extra)
     ]
   ]));
 }
@@ -165,12 +218,16 @@ function t2_decode(v) {
 
 export {
   t0_encode,
+  t0_encodeJson,
   t0_decode,
   t1_encode,
+  t1_encodeJson,
   t1_decode,
   b_encode,
+  b_encodeJson,
   b_decode,
   t2_encode,
+  t2_encodeJson,
   t2_decode,
 }
 /* No side effect */

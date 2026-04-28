@@ -7,11 +7,28 @@ function intResult_encode(v) {
   return Spice.resultToJson(Spice.intToJson, Spice.stringToJson, v);
 }
 
+function intResult_encodeJson(v) {
+  return Spice.resultToJson(Spice.intToJson, Spice.stringToJson, v);
+}
+
 function intResult_decode(v) {
   return Spice.resultFromJson(Spice.intFromJson, Spice.stringFromJson, v);
 }
 
 function inner_encode(v) {
+  return Object.fromEntries(Spice.filterOptional([
+    [
+      "id",
+      Spice.intToJson(v.id)
+    ],
+    [
+      "name",
+      Spice.stringToJson(v.name)
+    ]
+  ]));
+}
+
+function inner_encodeJson(v) {
   return Object.fromEntries(Spice.filterOptional([
     [
       "id",
@@ -48,7 +65,11 @@ function inner_decode(v) {
 }
 
 function innerResult_encode(v) {
-  return Spice.resultToJson(inner_encode, Spice.stringToJson, v);
+  return Spice.resultToJson(inner_encodeJson, Spice.stringToJson, v);
+}
+
+function innerResult_encodeJson(v) {
+  return Spice.resultToJson(inner_encodeJson, Spice.stringToJson, v);
 }
 
 function innerResult_decode(v) {
@@ -56,6 +77,10 @@ function innerResult_decode(v) {
 }
 
 function nestedResult_encode(v) {
+  return Spice.resultToJson(extra => Spice.resultToJson(Spice.intToJson, Spice.stringToJson, extra), Spice.stringToJson, v);
+}
+
+function nestedResult_encodeJson(v) {
   return Spice.resultToJson(extra => Spice.resultToJson(Spice.intToJson, Spice.stringToJson, extra), Spice.stringToJson, v);
 }
 
@@ -67,11 +92,19 @@ function resultT_encode(v) {
   return Spice.resultToJson(Spice.intToJson, Spice.stringToJson, v);
 }
 
+function resultT_encodeJson(v) {
+  return Spice.resultToJson(Spice.intToJson, Spice.stringToJson, v);
+}
+
 function resultT_decode(v) {
   return Spice.resultFromJson(Spice.intFromJson, Spice.stringFromJson, v);
 }
 
 function beltResultT_encode(v) {
+  return Spice.resultToJson(Spice.intToJson, Spice.stringToJson, v);
+}
+
+function beltResultT_encodeJson(v) {
   return Spice.resultToJson(Spice.intToJson, Spice.stringToJson, v);
 }
 
@@ -81,16 +114,22 @@ function beltResultT_decode(v) {
 
 export {
   intResult_encode,
+  intResult_encodeJson,
   intResult_decode,
   inner_encode,
+  inner_encodeJson,
   inner_decode,
   innerResult_encode,
+  innerResult_encodeJson,
   innerResult_decode,
   nestedResult_encode,
+  nestedResult_encodeJson,
   nestedResult_decode,
   resultT_encode,
+  resultT_encodeJson,
   resultT_decode,
   beltResultT_encode,
+  beltResultT_encodeJson,
   beltResultT_decode,
 }
 /* No side effect */

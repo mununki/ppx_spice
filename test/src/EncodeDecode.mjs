@@ -13,7 +13,21 @@ function te_encode(v) {
     ],
     [
       "nickname",
-      Spice.optionalToJson(Spice.stringToJson, extra)
+      Spice.optionToJson(Spice.stringToJson, extra)
+    ]
+  ]));
+}
+
+function te_encodeJson(v) {
+  let extra = v.nickname;
+  return Object.fromEntries(Spice.filterOptional([
+    [
+      "name",
+      Spice.stringToJson(v.name)
+    ],
+    [
+      "nickname",
+      Spice.optionToJson(Spice.stringToJson, extra)
     ]
   ]));
 }
@@ -46,6 +60,7 @@ function td_decode(v) {
 
 export {
   te_encode,
+  te_encodeJson,
   td_decode,
 }
 /* No side effect */

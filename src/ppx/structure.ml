@@ -12,8 +12,12 @@ let add_params param_names expr =
     param_names
     (Utils.expr_func ~arity:1 [%expr fun v -> [%e expr] v])
 
-let generate_codec_decls type_name param_names (encoder, decoder) =
+let generate_codec_decls type_name param_names ?value_encoder
+    (encoder, decoder) =
   let encoder_pat = Pat.var (mknoloc (type_name ^ Utils.encoder_func_suffix)) in
+  let value_encoder_pat =
+    Pat.var (mknoloc (type_name ^ Utils.value_encoder_func_suffix))
+  in
   let encoder_param_names =
     List.map (fun s -> encoder_var_prefix ^ s) param_names
   in
@@ -30,6 +34,15 @@ let generate_codec_decls type_name param_names (encoder, decoder) =
     | None -> vbs
     | Some encoder ->
         vbs @ [ Vb.mk encoder_pat (add_params encoder_param_names encoder) ]
+  in
+
+  let vbs =
+    match (encoder, value_encoder) with
+    | None, _ -> vbs
+    | Some encoder, None ->
+        vbs @ [ Vb.mk value_encoder_pat (add_params encoder_param_names encoder) ]
+    | _, Some encoder ->
+        vbs @ [ Vb.mk value_encoder_pat (add_params encoder_param_names encoder) ]
   in
 
   let vbs =
@@ -71,8 +84,20 @@ let map_type_decl decl =
             (Polyvariants.generate_codecs generator_settings row_fields
                is_unboxed)
       | Some manifest, _ ->
+          let value_encoder =
+            if
+              generator_settings.do_encode
+              && Option.is_some (Utils.get_default_option_inner_type manifest)
+            then
+              let encoder, _ =
+                Codecs.generate_value_codecs generator_settings manifest
+              in
+              encoder
+            else None
+          in
           generate_codec_decls type_name
             (get_param_names ptype_params)
+            ?value_encoder
             (generate_codecs generator_settings manifest)
       | None, Ptype_variant decls ->
           generate_codec_decls type_name
@@ -88,7 +113,9 @@ let map_type_decl decl =
 let map_structure_item mapper ({ pstr_desc } as structure_item) =
   match pstr_desc with
   | Pstr_type (rec_flag, decls) -> (
-      let value_bindings = decls |> List.map map_type_decl |> List.concat in
+      let value_bindings =
+        decls |> List.map map_type_decl |> List.concat
+      in
       [ mapper#structure_item structure_item ]
       @
       match List.length value_bindings > 0 with

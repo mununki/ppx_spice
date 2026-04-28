@@ -23,63 +23,143 @@ function params_encode(v) {
   return Object.fromEntries(Spice.filterOptional([
     [
       "width",
-      Spice.optionalToJson(Spice.floatToJson, extra)
+      Spice.optionToJson(Spice.floatToJson, extra)
     ],
     [
       "height",
-      Spice.optionalToJson(Spice.floatToJson, extra$1)
+      Spice.optionToJson(Spice.floatToJson, extra$1)
     ],
     [
       "animation",
-      Spice.optionalToJson(Spice.boolToJson, extra$2)
+      Spice.optionToJson(Spice.boolToJson, extra$2)
     ],
     [
       "focusInput",
-      Spice.optionalToJson(Spice.boolToJson, extra$3)
+      Spice.optionToJson(Spice.boolToJson, extra$3)
     ],
     [
       "autoMapping",
-      Spice.optionalToJson(Spice.boolToJson, extra$4)
+      Spice.optionToJson(Spice.boolToJson, extra$4)
     ],
     [
       "shorthand",
-      Spice.optionalToJson(Spice.boolToJson, extra$5)
+      Spice.optionToJson(Spice.boolToJson, extra$5)
     ],
     [
       "pleaseReadGuide",
-      Spice.optionalToJson(Spice.intToJson, extra$6)
+      Spice.optionToJson(Spice.intToJson, extra$6)
     ],
     [
       "pleaseReadGuideTimer",
-      Spice.optionalToJson(Spice.floatToJson, extra$7)
+      Spice.optionToJson(Spice.floatToJson, extra$7)
     ],
     [
       "maxSuggestItems",
-      Spice.optionalToJson(Spice.intToJson, extra$8)
+      Spice.optionToJson(Spice.intToJson, extra$8)
     ],
     [
       "showMoreHName",
-      Spice.optionalToJson(Spice.boolToJson, extra$9)
+      Spice.optionToJson(Spice.boolToJson, extra$9)
     ],
     [
       "hideMapBtn",
-      Spice.optionalToJson(Spice.boolToJson, extra$10)
+      Spice.optionToJson(Spice.boolToJson, extra$10)
     ],
     [
       "hideEngBtn",
-      Spice.optionalToJson(Spice.boolToJson, extra$11)
+      Spice.optionToJson(Spice.boolToJson, extra$11)
     ],
     [
       "alwaysShowEngAddr",
-      Spice.optionalToJson(Spice.boolToJson, extra$12)
+      Spice.optionToJson(Spice.boolToJson, extra$12)
     ],
     [
       "useBannerLink",
-      Spice.optionalToJson(Spice.boolToJson, extra$13)
+      Spice.optionToJson(Spice.boolToJson, extra$13)
     ],
     [
       "submitMode",
-      Spice.optionalToJson(Spice.boolToJson, extra$14)
+      Spice.optionToJson(Spice.boolToJson, extra$14)
+    ]
+  ]));
+}
+
+function params_encodeJson(v) {
+  let extra = v.width;
+  let extra$1 = v.height;
+  let extra$2 = v.animation;
+  let extra$3 = v.focusInput;
+  let extra$4 = v.autoMapping;
+  let extra$5 = v.shorthand;
+  let extra$6 = v.pleaseReadGuide;
+  let extra$7 = v.pleaseReadGuideTimer;
+  let extra$8 = v.maxSuggestItems;
+  let extra$9 = v.showMoreHName;
+  let extra$10 = v.hideMapBtn;
+  let extra$11 = v.hideEngBtn;
+  let extra$12 = v.alwaysShowEngAddr;
+  let extra$13 = v.useBannerLink;
+  let extra$14 = v.submitMode;
+  return Object.fromEntries(Spice.filterOptional([
+    [
+      "width",
+      Spice.optionToJson(Spice.floatToJson, extra)
+    ],
+    [
+      "height",
+      Spice.optionToJson(Spice.floatToJson, extra$1)
+    ],
+    [
+      "animation",
+      Spice.optionToJson(Spice.boolToJson, extra$2)
+    ],
+    [
+      "focusInput",
+      Spice.optionToJson(Spice.boolToJson, extra$3)
+    ],
+    [
+      "autoMapping",
+      Spice.optionToJson(Spice.boolToJson, extra$4)
+    ],
+    [
+      "shorthand",
+      Spice.optionToJson(Spice.boolToJson, extra$5)
+    ],
+    [
+      "pleaseReadGuide",
+      Spice.optionToJson(Spice.intToJson, extra$6)
+    ],
+    [
+      "pleaseReadGuideTimer",
+      Spice.optionToJson(Spice.floatToJson, extra$7)
+    ],
+    [
+      "maxSuggestItems",
+      Spice.optionToJson(Spice.intToJson, extra$8)
+    ],
+    [
+      "showMoreHName",
+      Spice.optionToJson(Spice.boolToJson, extra$9)
+    ],
+    [
+      "hideMapBtn",
+      Spice.optionToJson(Spice.boolToJson, extra$10)
+    ],
+    [
+      "hideEngBtn",
+      Spice.optionToJson(Spice.boolToJson, extra$11)
+    ],
+    [
+      "alwaysShowEngAddr",
+      Spice.optionToJson(Spice.boolToJson, extra$12)
+    ],
+    [
+      "useBannerLink",
+      Spice.optionToJson(Spice.boolToJson, extra$13)
+    ],
+    [
+      "submitMode",
+      Spice.optionToJson(Spice.boolToJson, extra$14)
     ]
   ]));
 }
@@ -232,6 +312,7 @@ function params_decode(v) {
 
 export {
   params_encode,
+  params_encodeJson,
   params_decode,
 }
 /* No side effect */

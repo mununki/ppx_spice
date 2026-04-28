@@ -11,6 +11,14 @@ function t_encode(v) {
   }
 }
 
+function t_encodeJson(v) {
+  if (v === "One") {
+    return 1;
+  } else {
+    return "둘";
+  }
+}
+
 function t_decode(v) {
   switch (typeof v) {
     case "string" :
@@ -37,6 +45,14 @@ function t_decode(v) {
 }
 
 function t1_encode(v) {
+  if (v === "One1") {
+    return ["One1"];
+  } else {
+    return ["Two1"];
+  }
+}
+
+function t1_encodeJson(v) {
   if (v === "One1") {
     return ["One1"];
   } else {
@@ -79,17 +95,29 @@ function t1_decode(v) {
 
 let t2_encode = Spice.intToJson;
 
+let t2_encodeJson = Spice.intToJson;
+
 function t2_decode(v) {
   return Stdlib_Result.map(Spice.intFromJson(v), v => v);
 }
 
 let t3_encode = Spice.intToJson;
 
+let t3_encodeJson = Spice.intToJson;
+
 function t3_decode(v) {
   return Stdlib_Result.map(Spice.intFromJson(v), v => v);
 }
 
 function t4_encode(v) {
+  if (v === "One") {
+    return 1.0;
+  } else {
+    return 2.0;
+  }
+}
+
+function t4_encodeJson(v) {
   if (v === "One") {
     return 1.0;
   } else {
@@ -123,7 +151,14 @@ function t4_decode(v) {
 function withOption_encode(v) {
   return [
     "WithOption",
-    Spice.optionToJson(Spice.stringToJson, v._0)
+    Spice.optionToNullableJson(Spice.stringToJson, v._0)
+  ];
+}
+
+function withOption_encodeJson(v) {
+  return [
+    "WithOption",
+    Spice.optionToNullableJson(Spice.stringToJson, v._0)
   ];
 }
 
@@ -169,7 +204,18 @@ function optionPayloadVariant_encode(v) {
   } else {
     return [
       "B",
-      Spice.optionToJson(Spice.stringToJson, v._0)
+      Spice.optionToNullableJson(Spice.stringToJson, v._0)
+    ];
+  }
+}
+
+function optionPayloadVariant_encodeJson(v) {
+  if (typeof v !== "object") {
+    return ["A"];
+  } else {
+    return [
+      "B",
+      Spice.optionToNullableJson(Spice.stringToJson, v._0)
     ];
   }
 }
@@ -272,18 +318,25 @@ function withArgs_decode(v) {
 
 export {
   t_encode,
+  t_encodeJson,
   t_decode,
   t1_encode,
+  t1_encodeJson,
   t1_decode,
   t2_encode,
+  t2_encodeJson,
   t2_decode,
   t3_encode,
+  t3_encodeJson,
   t3_decode,
   t4_encode,
+  t4_encodeJson,
   t4_decode,
   withOption_encode,
+  withOption_encodeJson,
   withOption_decode,
   optionPayloadVariant_encode,
+  optionPayloadVariant_encodeJson,
   optionPayloadVariant_decode,
   withArgs_decode,
 }

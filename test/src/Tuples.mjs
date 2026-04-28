@@ -5,7 +5,14 @@ import * as Spice from "./Spice.mjs";
 function withOption_encode(v) {
   return [
     Spice.stringToJson(v[0]),
-    Spice.optionToJson(Spice.stringToJson, v[1])
+    Spice.optionToNullableJson(Spice.stringToJson, v[1])
+  ];
+}
+
+function withOption_encodeJson(v) {
+  return [
+    Spice.stringToJson(v[0]),
+    Spice.optionToNullableJson(Spice.stringToJson, v[1])
   ];
 }
 
@@ -53,6 +60,7 @@ function withOption_decode(v) {
 
 export {
   withOption_encode,
+  withOption_encodeJson,
   withOption_decode,
 }
 /* No side effect */
