@@ -6,6 +6,10 @@ function t_encode(v) {
   return "m³";
 }
 
+function t_encodeJson(v) {
+  return "m³";
+}
+
 function t_decode(v) {
   switch (typeof v) {
     case "string" :
@@ -25,6 +29,17 @@ function t_decode(v) {
 }
 
 function t_encode$1(v) {
+  switch (v) {
+    case "Create" :
+      return "create";
+    case "Update" :
+      return "update";
+    case "Delete" :
+      return "delete";
+  }
+}
+
+function t_encodeJson$1(v) {
   switch (v) {
     case "Create" :
       return "create";
@@ -65,11 +80,13 @@ function t_decode$1(v) {
 
 let Action = {
   t_encode: t_encode$1,
+  t_encodeJson: t_encodeJson$1,
   t_decode: t_decode$1
 };
 
 export {
   t_encode,
+  t_encodeJson,
   t_decode,
   Action,
 }

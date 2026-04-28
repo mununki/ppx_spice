@@ -37,7 +37,7 @@ let generate_encoder_case generator_settings unboxed has_attr_as
       in
       let rhs_list =
         args
-        |> List.map (Codecs.generate_codecs generator_settings)
+        |> List.map (Codecs.generate_value_codecs generator_settings)
         |> List.map (fun (encoder, _) -> Option.get encoder)
         |> List.mapi (fun i e ->
                Exp.apply ~loc:pcd_loc e
@@ -81,7 +81,7 @@ let generate_arg_decoder generator_settings args constructor_name =
   |> List.append [ generate_decode_success_case num_args constructor_name ]
   |> Exp.match_
        (args
-       |> List.map (Codecs.generate_codecs generator_settings)
+       |> List.map (Codecs.generate_value_codecs generator_settings)
        |> List.mapi (fun i (_, decoder) ->
               Exp.apply (Option.get decoder)
                 [
@@ -161,7 +161,7 @@ let generate_unboxed_decode generator_settings
   | Pcstr_tuple args -> (
       match args with
       | [ a ] -> (
-          let _, d = Codecs.generate_codecs generator_settings a in
+          let _, d = Codecs.generate_value_codecs generator_settings a in
           match d with
           | Some d ->
               let constructor = Exp.construct (lid name) (Some [%expr v]) in
@@ -188,6 +188,19 @@ let parse_decl _generator_settings
 
   { name = txt; alias; has_attr_as; constr_decl }
 
+let validate_spice_as_payload unboxed parsed_decls =
+  if not unboxed then
+    parsed_decls
+    |> List.iter
+         (fun { has_attr_as; constr_decl = { pcd_args; pcd_loc }; _ } ->
+           match (has_attr_as, pcd_args) with
+           | true, Pcstr_tuple (_ :: _) ->
+               fail pcd_loc
+                 "@spice.as is only supported on constructors without payload; \
+                  use the default tagged array encoding or @unboxed for \
+                  single-payload variants"
+           | _ -> ())
+
 let generate_codecs ({ do_encode; do_decode } as generator_settings)
     constr_decls unboxed =
   let parsed_decls = List.map (parse_decl generator_settings) constr_decls in
@@ -200,6 +213,7 @@ let generate_codecs ({ do_encode; do_decode } as generator_settings)
       else failwith "Partial @spice.as usage is not allowed"
     else false
   in
+  validate_spice_as_payload unboxed parsed_decls;
 
   let encoder =
     if do_encode then

@@ -17,3 +17,5 @@ type innerDict = dict<inner>
 @spice
 type dictT = Dict.t<string>
 
+@spice
+type optionStringDict = dict<option<string>>

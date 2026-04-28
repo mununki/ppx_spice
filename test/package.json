@@ -6,6 +6,7 @@
   "devDependencies": {
     "@mununki/ppx-spice": "workspace:../",
     "@dusty-phillips/rescript-zora": "^4.0.0",
+    "@rescript/runtime": "12.0.0",
     "onchange": "^7.1.0",
     "pta": "^1.2.0",
     "rescript": "12.0.0",
@@ -17,6 +18,7 @@
     "res:clean": "rescript clean",
     "res:watch": "rescript watch",
     "test:watch": "onchange --initial '{test,src}/**/*.mjs' -- pta 'test/__tests__/**/*.mjs' | tap-difflet",
-    "test": "pta './test/__tests__/Index.mjs' | tap-difflet"
+    "test:compile-fail": "node ./scripts/expect-invalid-as-payload.mjs",
+    "test": "pta './test/__tests__/Index.mjs' | tap-difflet && pnpm test:compile-fail"
   }
 }

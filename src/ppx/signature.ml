@@ -2,6 +2,10 @@ open Ppxlib
 open Parsetree
 open Utils
 
+let ctyp_optional_json_t =
+  Ast_helper.Typ.constr (mknoloc (Longident.Lident "option"))
+    [ Utils.ctyp_json_t ]
+
 let rec add_encoder_params param_names result_type =
   match param_names with
   | [] -> result_type
@@ -23,8 +27,10 @@ let rec add_decoder_params param_names result_type =
       [%type: [%t decoder_param] -> [%t result_type]]
       |> Utils.ctyp_arrow ~arity:1 |> add_decoder_params tl
 
-let generate_sig_decls { do_encode; do_decode } type_name param_names =
+let generate_sig_decls { do_encode; do_decode } type_name param_names
+    encoder_result_type ~has_value_encoder =
   let encoder_pat = type_name ^ Utils.encoder_func_suffix in
+  let value_encoder_pat = type_name ^ Utils.value_encoder_func_suffix in
   let decoder_pat = type_name ^ Utils.decoder_func_suffix in
   let value_type =
     param_names
@@ -37,13 +43,26 @@ let generate_sig_decls { do_encode; do_decode } type_name param_names =
   let decls =
     match do_encode with
     | true ->
-        decls
-        @ [
-            [%type: [%t value_type] -> JSON.t] |> Utils.ctyp_arrow ~arity:1
+        let decls =
+          decls
+          @ [
+            [%type: [%t value_type] -> [%t encoder_result_type]]
+            |> Utils.ctyp_arrow ~arity:1
             |> add_encoder_params (List.rev param_names)
             |> Ast_helper.Val.mk (mknoloc encoder_pat)
             |> Ast_helper.Sig.value;
           ]
+        in
+        if has_value_encoder then
+          decls
+          @ [
+              [%type: [%t value_type] -> JSON.t]
+              |> Utils.ctyp_arrow ~arity:1
+              |> add_encoder_params (List.rev param_names)
+              |> Ast_helper.Val.mk (mknoloc value_encoder_pat)
+              |> Ast_helper.Sig.value;
+            ]
+        else decls
     | false -> decls
   in
   let decls =
@@ -66,6 +85,7 @@ let map_type_decl decl =
   let {
     ptype_attributes;
     ptype_name = { txt = type_name };
+    ptype_manifest;
     ptype_params;
     ptype_loc;
   } =
@@ -76,8 +96,17 @@ let map_type_decl decl =
   | Error s -> fail ptype_loc s
   | Ok None -> []
   | Ok (Some generator_settings) ->
+      let encoder_result_type =
+        match ptype_manifest with
+        | Some manifest -> (
+            match Utils.get_default_option_inner_type manifest with
+            | Some _ -> ctyp_optional_json_t
+            | None -> [%type: JSON.t])
+        | None -> [%type: JSON.t]
+      in
       generate_sig_decls generator_settings type_name
         (get_param_names ptype_params)
+        encoder_result_type ~has_value_encoder:true
 
 let map_signature_item mapper ({ psig_desc } as signature_item) =
   match psig_desc with

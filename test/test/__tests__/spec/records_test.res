@@ -101,6 +101,50 @@ zoraBlock("record with optional field", t => {
   let encoded = sampleRecord3->Records.tOp_encode
   t->testEqual(`encode omit optional field with None field`, encoded, sampleJson3)
 
+  let decodedMissing = sampleJson3->Records.tOp_decode
+  t->test("decode missing option and optional fields", async t => {
+    switch decodedMissing {
+    | Ok(record) => {
+        t->equal(record.label, None, "label")
+        t->equal(record.value, None, "value")
+      }
+    | Error(_) => t->fail("expected decode to succeed")
+    }
+  })
+
+  let sample4 = dict{
+    "label": JSON.Null,
+  }
+  let sampleJson4 = sample4->JSON.Object
+  let decodedNull = sampleJson4->Records.tOp_decode
+  t->test("decode null option field returns error", async t => {
+    switch decodedNull {
+    | Error({path, message, value}) => {
+        t->equal(path, ".label", "path")
+        t->equal(message, "Not a string", "message")
+        t->equal(value, JSON.Null, "value")
+      }
+    | Ok(_) => t->fail("expected decode to fail")
+    }
+  })
+
+  let sample5 = dict{
+    "label": JSON.String("sample"),
+    "value": JSON.Null,
+  }
+  let sampleJson5 = sample5->JSON.Object
+  let decodedNullOptional = sampleJson5->Records.tOp_decode
+  t->test("decode null optional field returns error", async t => {
+    switch decodedNullOptional {
+    | Error({path, message, value}) => {
+        t->equal(path, ".value", "path")
+        t->equal(message, "Not a number", "message")
+        t->equal(value, JSON.Null, "value")
+      }
+    | Ok(_) => t->fail("expected decode to fail")
+    }
+  })
+
   // FIXME: https://github.com/rescript-lang/rescript-compiler/issues/6485
   // let decoded = sampleJson3->Records.tOp_decode
   // t->testEqual(`decode omit optional field with None field`, decoded, Ok(sampleRecord3))
@@ -129,6 +173,56 @@ zoraBlock("record with null", t => {
   let _ = %raw(`sampleRecord["o"]= undefined`)
   let _ = %raw(`sampleRecord["on"]= undefined`)
   t->testEqual(`decode`, decoded, Ok(sampleRecord))
+
+  let sampleWithOptionalNull = dict{
+    "n": JSON.String("n"),
+    "on": JSON.Null,
+    "n2": JSON.String("n2"),
+  }
+  let decoded = sampleWithOptionalNull->JSON.Object->Records.t2_decode
+  t->test("decode optional null field", async t => {
+    switch decoded {
+    | Ok(record) => t->equal(record.on, Some(Null.Null), "on")
+    | Error(_) => t->fail("expected decode to succeed")
+    }
+  })
+})
+
+zoraBlock("record with option null value", t => {
+  let omittedJson = JSON.Object(dict{})
+  let omittedRecord: Records.t5 = {
+    maybeNull: None,
+  }
+  let encodedOmitted = omittedRecord->Records.t5_encode
+  t->testEqual(`encode None omits key`, encodedOmitted, omittedJson)
+
+  let decodedOmitted = omittedJson->Records.t5_decode
+  t->test("decode missing option null field", async t => {
+    switch decodedOmitted {
+    | Ok(record) => t->equal(record.maybeNull, None, "maybeNull")
+    | Error(_) => t->fail("expected decode to succeed")
+    }
+  })
+
+  let nullJson = JSON.Object(dict{"maybeNull": JSON.Null})
+  let nullRecord: Records.t5 = {
+    maybeNull: Some(Null.Null),
+  }
+  let encodedNull = nullRecord->Records.t5_encode
+  t->testEqual(`encode Some(Null)`, encodedNull, nullJson)
+
+  let decodedNull = nullJson->Records.t5_decode
+  t->testEqual(`decode Some(Null)`, decodedNull, Ok(nullRecord))
+
+  let valueJson = JSON.Object(dict{"maybeNull": JSON.String("value")})
+  let valueRecord: Records.t5 = {
+    maybeNull: Some(Null.Value("value")),
+  }
+  let encodedValue = valueRecord->Records.t5_encode
+  t->testEqual(`encode Some(Null.Value)`, encodedValue, valueJson)
+
+  let decodedValue = valueJson->Records.t5_decode
+  t->testEqual(`decode Some(Null.Value)`, decodedValue, Ok(valueRecord))
 })
 
 zoraBlock("record with spice.default", t => {

@@ -37,6 +37,11 @@ type t4 = {
   c: option<bigint>,
 }
 
+@spice
+type t5 = {
+  maybeNull: option<Null.t<string>>,
+}
+
 // Types for testing nested error paths
 @spice.decode
 type inner = {value: int}

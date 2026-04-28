@@ -7,11 +7,19 @@ function stringArray_encode(v) {
   return Spice.arrayToJson(Spice.stringToJson, v);
 }
 
+function stringArray_encodeJson(v) {
+  return Spice.arrayToJson(Spice.stringToJson, v);
+}
+
 function stringArray_decode(v) {
   return Spice.arrayFromJson(Spice.stringFromJson, v);
 }
 
 function intArray_encode(v) {
+  return Spice.arrayToJson(Spice.intToJson, v);
+}
+
+function intArray_encodeJson(v) {
   return Spice.arrayToJson(Spice.intToJson, v);
 }
 
@@ -23,6 +31,10 @@ function floatArray_encode(v) {
   return Spice.arrayToJson(Spice.floatToJson, v);
 }
 
+function floatArray_encodeJson(v) {
+  return Spice.arrayToJson(Spice.floatToJson, v);
+}
+
 function floatArray_decode(v) {
   return Spice.arrayFromJson(Spice.floatFromJson, v);
 }
@@ -31,11 +43,28 @@ function boolArray_encode(v) {
   return Spice.arrayToJson(Spice.boolToJson, v);
 }
 
+function boolArray_encodeJson(v) {
+  return Spice.arrayToJson(Spice.boolToJson, v);
+}
+
 function boolArray_decode(v) {
   return Spice.arrayFromJson(Spice.boolFromJson, v);
 }
 
 function recordItem_encode(v) {
+  return Object.fromEntries(Spice.filterOptional([
+    [
+      "id",
+      Spice.intToJson(v.id)
+    ],
+    [
+      "name",
+      Spice.stringToJson(v.name)
+    ]
+  ]));
+}
+
+function recordItem_encodeJson(v) {
   return Object.fromEntries(Spice.filterOptional([
     [
       "id",
@@ -72,7 +101,11 @@ function recordItem_decode(v) {
 }
 
 function recordArray_encode(v) {
-  return Spice.arrayToJson(recordItem_encode, v);
+  return Spice.arrayToJson(recordItem_encodeJson, v);
+}
+
+function recordArray_encodeJson(v) {
+  return Spice.arrayToJson(recordItem_encodeJson, v);
 }
 
 function recordArray_decode(v) {
@@ -83,24 +116,35 @@ function nestedArray_encode(v) {
   return Spice.arrayToJson(extra => Spice.arrayToJson(Spice.intToJson, extra), v);
 }
 
+function nestedArray_encodeJson(v) {
+  return Spice.arrayToJson(extra => Spice.arrayToJson(Spice.intToJson, extra), v);
+}
+
 function nestedArray_decode(v) {
   return Spice.arrayFromJson(extra => Spice.arrayFromJson(Spice.intFromJson, extra), v);
 }
 
 export {
   stringArray_encode,
+  stringArray_encodeJson,
   stringArray_decode,
   intArray_encode,
+  intArray_encodeJson,
   intArray_decode,
   floatArray_encode,
+  floatArray_encodeJson,
   floatArray_decode,
   boolArray_encode,
+  boolArray_encodeJson,
   boolArray_decode,
   recordItem_encode,
+  recordItem_encodeJson,
   recordItem_decode,
   recordArray_encode,
+  recordArray_encodeJson,
   recordArray_decode,
   nestedArray_encode,
+  nestedArray_encodeJson,
   nestedArray_decode,
 }
 /* No side effect */

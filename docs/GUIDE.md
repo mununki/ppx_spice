@@ -64,6 +64,7 @@ let json: Js.Json.t = user->Result.getExn->user_encode
 ```
 
 `@spice.as("...")` is used to specify the JSON value of the variant. Without it, the variant name is also used as the JSON value, but the JSON value should be formed as an array to be parsed as a variant. The second example shows how to use it for the case of variant with argument.
+`@spice.as` is only supported on constructors without payload. For constructors with payload, use the default tagged array encoding, or `@unboxed` for a single-payload variant that should use the payload JSON directly.
 
 ```rescript
 @spice
@@ -88,6 +89,16 @@ let data = %raw(`
   }
 `)
 ```
+
+### Option and Null
+
+In records, `option<T>` fields and optional fields encode `None` by omitting the object key. A missing key decodes to `None`. A present JSON `null` is decoded by `T`; for example, `option<string>` fails on `null` because `string` cannot decode `null`. Use `Null.t<T>` when a present JSON `null` is a valid value.
+
+In tuples, variant payloads, arrays, lists, and result payloads, `option<T>` is a fixed-position JSON value. `None` encodes as JSON `null`, and JSON `null` decodes as `None`.
+
+For a top-level `option<T>` type alias, the encoder returns `option<JSON.t>`. `Some(value)` encodes to `Some(json)`, while `None` encodes to `None`.
+
+For `dict<option<T>>`, `None` values are omitted from the JSON object. A present JSON `null` value decodes as `None`.
 
 ### Advanced Usage
 

@@ -2,8 +2,23 @@
 
 import * as Spice from "./Spice.mjs";
 import * as Stdlib_Option from "@rescript/runtime/lib/es6/Stdlib_Option.js";
+import * as Stdlib_Result from "@rescript/runtime/lib/es6/Stdlib_Result.js";
 
 function te_encode(v) {
+  let extra = v.nickname;
+  return Object.fromEntries(Spice.filterOptional([
+    [
+      "name",
+      Spice.stringToJson(v.name)
+    ],
+    [
+      "nickname",
+      Spice.optionToJson(Spice.stringToJson, extra)
+    ]
+  ]));
+}
+
+function te_encodeJson(v) {
   let extra = v.nickname;
   return Object.fromEntries(Spice.filterOptional([
     [
@@ -23,7 +38,7 @@ function td_decode(v) {
   }
   let name = Stdlib_Option.getOr(Stdlib_Option.map(v["name"], Spice.stringFromJson), Spice.error(undefined, "name" + " missing", v));
   if (name.TAG === "Ok") {
-    let nickname = Stdlib_Option.getOr(Stdlib_Option.map(v["nickname"], extra => Spice.optionFromJson(Spice.stringFromJson, extra)), {
+    let nickname = Stdlib_Option.getOr(Stdlib_Option.map(v["nickname"], json => Stdlib_Result.map(Spice.stringFromJson(json), v => v)), {
       TAG: "Ok",
       _0: undefined
     });
@@ -45,6 +60,7 @@ function td_decode(v) {
 
 export {
   te_encode,
+  te_encodeJson,
   td_decode,
 }
 /* No side effect */

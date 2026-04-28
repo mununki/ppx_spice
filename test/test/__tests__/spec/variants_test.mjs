@@ -80,6 +80,123 @@ Zora.test("variants with @spice.as number", t => {
   });
 });
 
+Zora.test("variant payload with option", t => {
+  let encodedSome = Variants.withOption_encode({
+    TAG: "WithOption",
+    _0: "value"
+  });
+  testEqual(t, `encode Some`, encodedSome, [
+    "WithOption",
+    "value"
+  ]);
+  let encoded = Variants.withOption_encode({
+    TAG: "WithOption",
+    _0: undefined
+  });
+  testEqual(t, `encode None`, encoded, [
+    "WithOption",
+    null
+  ]);
+  let decodedSome = Variants.withOption_decode([
+    "WithOption",
+    "value"
+  ]);
+  testEqual(t, `decode Some`, decodedSome, {
+    TAG: "Ok",
+    _0: {
+      TAG: "WithOption",
+      _0: "value"
+    }
+  });
+  let decoded = Variants.withOption_decode([
+    "WithOption",
+    null
+  ]);
+  testEqual(t, `decode None`, decoded, {
+    TAG: "Ok",
+    _0: {
+      TAG: "WithOption",
+      _0: undefined
+    }
+  });
+  let decodedInvalid = Variants.withOption_decode([
+    "WithOption",
+    1.0
+  ]);
+  t.test("decode invalid option payload includes variant payload index", async t => {
+    if (decodedInvalid.TAG === "Ok") {
+      t.fail("expected decode to fail");
+      return;
+    }
+    let match = decodedInvalid._0;
+    t.equal(match.path, "[1]", "path");
+    t.equal(match.message, "Not a string", "message");
+    t.equal(match.value, 1.0, "value");
+  });
+});
+
+Zora.test("variant with payloadless and option payload constructors", t => {
+  let encodedA = Variants.optionPayloadVariant_encode("A");
+  testEqual(t, `encode A`, encodedA, ["A"]);
+  let encodedSome = Variants.optionPayloadVariant_encode({
+    TAG: "B",
+    _0: "value"
+  });
+  testEqual(t, `encode B Some`, encodedSome, [
+    "B",
+    "value"
+  ]);
+  let encodedNone = Variants.optionPayloadVariant_encode({
+    TAG: "B",
+    _0: undefined
+  });
+  testEqual(t, `encode B None`, encodedNone, [
+    "B",
+    null
+  ]);
+  let decodedA = Variants.optionPayloadVariant_decode(["A"]);
+  testEqual(t, `decode A`, decodedA, {
+    TAG: "Ok",
+    _0: "A"
+  });
+  let decodedSome = Variants.optionPayloadVariant_decode([
+    "B",
+    "value"
+  ]);
+  testEqual(t, `decode B Some`, decodedSome, {
+    TAG: "Ok",
+    _0: {
+      TAG: "B",
+      _0: "value"
+    }
+  });
+  let decodedNone = Variants.optionPayloadVariant_decode([
+    "B",
+    null
+  ]);
+  testEqual(t, `decode B None`, decodedNone, {
+    TAG: "Ok",
+    _0: {
+      TAG: "B",
+      _0: undefined
+    }
+  });
+  let decodedInvalid = Variants.optionPayloadVariant_decode([
+    "B",
+    1.0
+  ]);
+  t.test("decode invalid B option payload includes payload index", async t => {
+    if (decodedInvalid.TAG === "Ok") {
+      t.fail("expected decode to fail");
+      return;
+    }
+    let match = decodedInvalid._0;
+    t.equal(match.path, "[1]", "path");
+    t.equal(match.message, "Not a string", "message");
+    t.equal(match.value, 1.0, "value");
+  });
+});
+
 Zora.test("variant error path includes correct index", t => {
   let invalidJson = [
     "WithArgs",

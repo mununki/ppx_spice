@@ -2,19 +2,36 @@
 
 import * as Dicts_test from "./spec/dicts_test.mjs";
 import * as Arrays_test from "./spec/arrays_test.mjs";
+import * as Tuples_test from "./spec/tuples_test.mjs";
 import * as Records_test from "./spec/records_test.mjs";
 import * as Results_test from "./spec/results_test.mjs";
 import * as Variants_test from "./spec/variants_test.mjs";
 import * as Polyvariants_test from "./spec/polyvariants_test.mjs";
 import * as Encode_decode_test from "./spec/encode_decode_test.mjs";
+import * as Top_level_options_test from "./spec/top_level_options_test.mjs";
 import * as Optional_field_records_test from "./spec/optional_field_records_test.mjs";
 
 let deepEqualWithBigInt = Records_test.deepEqualWithBigInt;
+
+let optionRecord = Top_level_options_test.optionRecord;
+
+let optionRecordJson = Top_level_options_test.optionRecordJson;
+
+let nestedTuple = Top_level_options_test.nestedTuple;
+
+let nestedTupleJson = Top_level_options_test.nestedTupleJson;
+
+let payloadVariantJson = Top_level_options_test.payloadVariantJson;
 
 let testEqual = Results_test.testEqual;
 
 export {
   deepEqualWithBigInt,
+  optionRecord,
+  optionRecordJson,
+  nestedTuple,
+  nestedTupleJson,
+  payloadVariantJson,
   testEqual,
 }
 /* Dicts_test Not a pure module */

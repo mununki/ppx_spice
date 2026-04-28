@@ -10,6 +10,14 @@ function t_encode(v) {
   }
 }
 
+function t_encodeJson(v) {
+  if (v === "two") {
+    return `둘`;
+  } else {
+    return `하나`;
+  }
+}
+
 function t_decode(v) {
   switch (typeof v) {
     case "string" :
@@ -34,6 +42,14 @@ function t_decode(v) {
 }
 
 function t1_encode(v) {
+  if (v === "two") {
+    return ["two"];
+  } else {
+    return ["one"];
+  }
+}
+
+function t1_encodeJson(v) {
   if (v === "two") {
     return ["two"];
   } else {
@@ -75,6 +91,14 @@ function t1_decode(v) {
 }
 
 function t2_encode(v) {
+  if (v === "two") {
+    return 2.0;
+  } else {
+    return 1.0;
+  }
+}
+
+function t2_encodeJson(v) {
   if (v === "two") {
     return 2.0;
   } else {
@@ -157,10 +181,13 @@ function withArgs_decode(v) {
 
 export {
   t_encode,
+  t_encodeJson,
   t_decode,
   t1_encode,
+  t1_encodeJson,
   t1_decode,
   t2_encode,
+  t2_encodeJson,
   t2_decode,
   withArgs_decode,
 }

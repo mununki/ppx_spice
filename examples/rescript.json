@@ -8,13 +8,12 @@
   ],
   "package-specs": [
     {
-      "module": "commonjs",
+      "module": "esmodule",
       "in-source": true
     }
   ],
-  "dependencies": [
-    "@mununki/ppx-spice"
-  ],
+  "suffix": ".mjs",
+  "dependencies": [],
   "dev-dependencies": [],
   "ppx-flags": [
     "@mununki/ppx-spice/ppx"

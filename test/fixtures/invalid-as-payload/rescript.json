@@ -1,0 +1,25 @@
+{
+  "name": "invalid-as-payload",
+  "sources": [
+    {
+      "dir": "src",
+      "subdirs": true
+    }
+  ],
+  "package-specs": [
+    {
+      "module": "esmodule",
+      "in-source": true
+    }
+  ],
+  "suffix": ".mjs",
+  "ppx-flags": [
+    "@mununki/ppx-spice/ppx"
+  ],
+  "dependencies": [
+    "@mununki/ppx-spice"
+  ],
+  "warnings": {
+    "error": true
+  }
+}

@@ -56,7 +56,7 @@ let generate_encoder_case generator_settings unboxed has_attr_as row =
 
       let rhs_list =
         args
-        |> List.map (Codecs.generate_codecs generator_settings)
+        |> List.map (Codecs.generate_value_codecs generator_settings)
         |> List.map (fun (encoder, _) -> Option.get encoder)
         |> List.mapi (fun i e ->
                Exp.apply ~loc e
@@ -101,7 +101,7 @@ let generate_arg_decoder generator_settings args constructor_name =
   |> List.append [ generate_decode_success_case num_args constructor_name ]
   |> Exp.match_
        (args
-       |> List.map (Codecs.generate_codecs generator_settings)
+       |> List.map (Codecs.generate_value_codecs generator_settings)
        |> List.mapi (fun i (_, decoder) ->
               Exp.apply (Option.get decoder)
                 [
@@ -184,7 +184,7 @@ let generate_unboxed_decode generator_settings { prf_desc } =
   | Rtag ({ txt; loc }, _, args) -> (
       match args with
       | [ a ] -> (
-          let _, d = Codecs.generate_codecs generator_settings a in
+          let _, d = Codecs.generate_value_codecs generator_settings a in
           match d with
           | Some d ->
               let constructor = Exp.construct (lid txt) (Some [%expr v]) in
