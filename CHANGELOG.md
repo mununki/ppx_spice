@@ -1,5 +1,12 @@
 # CHANGELOG
 
+# 0.4.0
+
+- BREAKING: separate option encoders by JSON context. Top-level `option<T>` encoders now return `option<JSON.t>`, while fixed-position option values in tuples, variant payloads, arrays, lists, and results encode `None` as `JSON.Null`.
+- Add generated `*_encodeJson` helpers for fixed JSON value contexts.
+- Fix option encoding for nested top-level aliases, tuple fields, variant payloads, and `dict<option<T>>`. https://github.com/mununki/ppx_spice/pull/122
+- Update examples to ESM output for direct Node execution with ReScript 12 runtime.
+
 # 0.3.4
 
 - migration to mununki

@@ -6,6 +6,8 @@ examples
 test
 docs
 AGENTS.md
+lib
+yarn-error.log
 src/bin
 src/ppx
 src/.ocamlformat
