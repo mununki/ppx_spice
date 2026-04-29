@@ -1,5 +1,9 @@
 # CHANGELOG
 
+# Unreleased
+
+- Fix generated codecs for parameterized types so generic encoders and decoders can be partially applied in ReScript 12. https://github.com/mununki/ppx_spice/pull/123
+
 # 0.4.0
 
 - BREAKING: separate option encoders by JSON context. Top-level `option<T>` encoders now return `option<JSON.t>`, while fixed-position option values in tuples, variant payloads, arrays, lists, and results encode `None` as `JSON.Null`.
