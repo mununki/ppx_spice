@@ -9,7 +9,20 @@ import * as Variants_test from "./spec/variants_test.mjs";
 import * as Polyvariants_test from "./spec/polyvariants_test.mjs";
 import * as Encode_decode_test from "./spec/encode_decode_test.mjs";
 import * as Top_level_options_test from "./spec/top_level_options_test.mjs";
+import * as Generic_type_params_test from "./spec/generic_type_params_test.mjs";
 import * as Optional_field_records_test from "./spec/optional_field_records_test.mjs";
+
+let dataObject = Generic_type_params_test.dataObject;
+
+let dataObjectJson = Generic_type_params_test.dataObjectJson;
+
+let pairObject = Generic_type_params_test.pairObject;
+
+let pairObjectJson = Generic_type_params_test.pairObjectJson;
+
+let nestedObject = Generic_type_params_test.nestedObject;
+
+let nestedObjectJson = Generic_type_params_test.nestedObjectJson;
 
 let deepEqualWithBigInt = Records_test.deepEqualWithBigInt;
 
@@ -26,6 +39,12 @@ let payloadVariantJson = Top_level_options_test.payloadVariantJson;
 let testEqual = Results_test.testEqual;
 
 export {
+  dataObject,
+  dataObjectJson,
+  pairObject,
+  pairObjectJson,
+  nestedObject,
+  nestedObjectJson,
   deepEqualWithBigInt,
   optionRecord,
   optionRecordJson,

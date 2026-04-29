@@ -1,5 +1,6 @@
 include Arrays_test
 include Encode_decode_test
+include Generic_type_params_test
 include Optional_field_records_test
 include Polyvariants_test
 include Records_test
