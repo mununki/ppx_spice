@@ -224,7 +224,7 @@ match get_attribute_by_name attributes "spice.key" with
 ## CI/CD
 
 GitHub Actions workflows are in `.github/workflows/`:
-- `build_linux.yml` - Linux build with Alpine container
+- `build_linux.yml` - Linux x64 and arm64 builds with Alpine container
 - `build_macos.yml` - macOS build
 - `build_windows.yml` - Windows build
 - `publish.yml` - NPM package publishing

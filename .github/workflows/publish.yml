@@ -25,16 +25,22 @@ permissions:
 
 jobs:
   build_linux:
-    name: ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    name: Linux ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
     defaults:
       run:
         working-directory: src
     strategy:
       matrix:
-        os: [ubuntu-latest]
-        ocaml-compiler:
-          - 4.14.2
+        include:
+          - arch: x64
+            runner: ubuntu-latest
+            artifact: linux-x64
+            ocaml-compiler: 4.14.2
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            artifact: linux-arm64
+            ocaml-compiler: 4.14.2
     container:
       image: ocaml/opam:alpine-3.16-ocaml-4.14
       options: --user root
@@ -58,10 +64,10 @@ jobs:
         run: |
           mv ./_build/default/bin/bin.exe ppx.exe
 
-      - name: (only on release) Upload artifacts ${{ matrix.os }}
+      - name: (only on release) Upload artifacts ${{ matrix.artifact }}
         uses: actions/upload-artifact@master
         with:
-          name: ${{ matrix.os }}
+          name: ${{ matrix.artifact }}
           path: src/ppx.exe
           if-no-files-found: error
 
@@ -196,12 +202,19 @@ jobs:
       - name: Update npm for OIDC support
         run: npm install -g npm@latest
 
-      - name: Download linux artifacts
+      - name: Download Linux x64 artifacts
         if: success()
         uses: actions/download-artifact@master
         with:
-          name: ubuntu-latest
-          path: binaries/linux
+          name: linux-x64
+          path: binaries/linux-x64
+
+      - name: Download Linux arm64 artifacts
+        if: success()
+        uses: actions/download-artifact@master
+        with:
+          name: linux-arm64
+          path: binaries/linux-arm64
 
       - name: Download macOS x64 artifacts
         if: success()
@@ -228,14 +241,15 @@ jobs:
         if: success()
         run: |
           mkdir -p bin
-          mv binaries/linux/ppx.exe ppx-linux.exe
+          mv binaries/linux-x64/ppx.exe ppx-linux-x64.exe
+          mv binaries/linux-arm64/ppx.exe ppx-linux-arm64.exe
           mv binaries/darwin-x64/ppx.exe ppx-osx-x64.exe
           mv binaries/darwin-arm64/ppx.exe ppx-osx-arm64.exe
           mv binaries/windows/ppx.exe ppx-windows.exe
 
       - name: Set executable permissions
         if: success()
-        run: chmod +x ppx-linux.exe ppx-osx-x64.exe ppx-osx-arm64.exe
+        run: chmod +x ppx-linux-x64.exe ppx-linux-arm64.exe ppx-osx-x64.exe ppx-osx-arm64.exe
 
       - name: Pack package
         if: success()
@@ -258,7 +272,8 @@ jobs:
           name: Release ${{ env.TARGET_REF }}
           generate_release_notes: true
           files: |
-            ppx-linux.exe
+            ppx-linux-x64.exe
+            ppx-linux-arm64.exe
             ppx-osx-x64.exe
             ppx-osx-arm64.exe
             ppx-windows.exe
