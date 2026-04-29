@@ -1,6 +1,6 @@
 # CHANGELOG
 
-# Unreleased
+# 0.4.1
 
 - Fix generated codecs for parameterized types so generic encoders and decoders can be partially applied in ReScript 12. https://github.com/mununki/ppx_spice/pull/123
 
