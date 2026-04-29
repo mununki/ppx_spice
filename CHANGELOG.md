@@ -1,5 +1,9 @@
 # CHANGELOG
 
+# 0.4.2
+
+- Add Linux arm64 release binaries and package installation support.
+
 # 0.4.1
 
 - Fix generated codecs for parameterized types so generic encoders and decoders can be partially applied in ReScript 12. https://github.com/mununki/ppx_spice/pull/123
