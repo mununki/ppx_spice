@@ -8,7 +8,7 @@ let add_params param_names expr =
   List.fold_right
     (fun s acc ->
       let pat = Pat.var (mknoloc s) in
-      Exp.fun_ Asttypes.Nolabel None pat acc)
+      Exp.fun_ Asttypes.Nolabel None pat acc |> Utils.expr_func ~arity:1)
     param_names
     (Utils.expr_func ~arity:1 [%expr fun v -> [%e expr] v])
 
