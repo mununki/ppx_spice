@@ -16,10 +16,10 @@ jobs:
           - 4.14.2
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
 
       - name: Use OCaml ${{ matrix.ocaml-compiler}}
-        uses: ocaml/setup-ocaml@v2
+        uses: ocaml/setup-ocaml@v3
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
 
@@ -34,7 +34,7 @@ jobs:
           mv ./_build/default/bin/bin.exe ppx.exe
 
       - name: (only on release) Upload artifacts ${{ matrix.os }}
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.os }}
           path: src/ppx.exe

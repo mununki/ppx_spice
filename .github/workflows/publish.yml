@@ -46,7 +46,7 @@ jobs:
       options: --user root
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
         with:
           repository: ${{ env.TARGET_REPO }}
           ref: ${{ env.TARGET_REF }}
@@ -65,7 +65,7 @@ jobs:
           mv ./_build/default/bin/bin.exe ppx.exe
 
       - name: (only on release) Upload artifacts ${{ matrix.artifact }}
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}
           path: src/ppx.exe
@@ -81,13 +81,13 @@ jobs:
       ocaml-compiler: 4.14.2
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
         with:
           repository: ${{ env.TARGET_REPO }}
           ref: ${{ env.TARGET_REF }}
 
       - name: Use OCaml ${{ env.ocaml-compiler }}
-        uses: ocaml/setup-ocaml@v2
+        uses: ocaml/setup-ocaml@v3
         with:
           ocaml-compiler: ${{ env.ocaml-compiler }}
 
@@ -102,7 +102,7 @@ jobs:
           mv ./_build/default/bin/bin.exe ppx.exe
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v7
         with:
           name: macOS-x64
           path: src/ppx.exe
@@ -118,13 +118,13 @@ jobs:
       ocaml-compiler: 4.14.2
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
         with:
           repository: ${{ env.TARGET_REPO }}
           ref: ${{ env.TARGET_REF }}
 
       - name: Use OCaml ${{ env.ocaml-compiler }}
-        uses: ocaml/setup-ocaml@v2
+        uses: ocaml/setup-ocaml@v3
         with:
           ocaml-compiler: ${{ env.ocaml-compiler }}
 
@@ -139,7 +139,7 @@ jobs:
           mv ./_build/default/bin/bin.exe ppx.exe
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v7
         with:
           name: macOS-arm64
           path: src/ppx.exe
@@ -158,13 +158,13 @@ jobs:
           - 4.14.2
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
         with:
           repository: ${{ env.TARGET_REPO }}
           ref: ${{ env.TARGET_REF }}
 
       - name: Use OCaml ${{ matrix.ocaml-compiler}}
-        uses: ocaml/setup-ocaml@v2
+        uses: ocaml/setup-ocaml@v3
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
 
@@ -179,7 +179,7 @@ jobs:
           mv ./_build/default/bin/bin.exe ppx.exe
 
       - name: (only on release) Upload artifacts ${{ matrix.os }}
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.os }}
           path: src/ppx.exe
@@ -190,11 +190,11 @@ jobs:
     name: (only on release) Publish
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
         with:
           repository: ${{ env.TARGET_REPO }}
           ref: ${{ env.TARGET_REF }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
           registry-url: "https://registry.npmjs.org"
@@ -204,35 +204,35 @@ jobs:
 
       - name: Download Linux x64 artifacts
         if: success()
-        uses: actions/download-artifact@master
+        uses: actions/download-artifact@v7
         with:
           name: linux-x64
           path: binaries/linux-x64
 
       - name: Download Linux arm64 artifacts
         if: success()
-        uses: actions/download-artifact@master
+        uses: actions/download-artifact@v7
         with:
           name: linux-arm64
           path: binaries/linux-arm64
 
       - name: Download macOS x64 artifacts
         if: success()
-        uses: actions/download-artifact@master
+        uses: actions/download-artifact@v7
         with:
           name: macOS-x64
           path: binaries/darwin-x64
 
       - name: Download macOS arm64 artifacts
         if: success()
-        uses: actions/download-artifact@master
+        uses: actions/download-artifact@v7
         with:
           name: macOS-arm64
           path: binaries/darwin-arm64
 
       - name: Download windows artifacts
         if: success()
-        uses: actions/download-artifact@master
+        uses: actions/download-artifact@v7
         with:
           name: windows-latest
           path: binaries/windows
@@ -266,7 +266,7 @@ jobs:
 
       - name: Create GitHub Release
         if: success() && startsWith(env.TARGET_REF, 'refs/tags/') || startsWith(env.TARGET_REF, 'v')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.TARGET_REF }}
           name: Release ${{ env.TARGET_REF }}
