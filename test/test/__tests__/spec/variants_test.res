@@ -129,6 +129,186 @@ zoraBlock("variant with payloadless and option payload constructors", t => {
   })
 })
 
+zoraBlock("variant with inline record payload", t => {
+  let encodedBoo = Variants.InlineBoo({a: "Bo"})->Variants.inlineRecordPayload_encode
+  t->testEqual(
+    `encode InlineBoo`,
+    encodedBoo,
+    JSON.Array([JSON.String("InlineBoo"), JSON.Object(dict{"a": JSON.String("Bo")})]),
+  )
+
+  let decodedBoo =
+    JSON.Array([JSON.String("InlineBoo"), JSON.Object(dict{"a": JSON.String("Bo")})])
+    ->Variants.inlineRecordPayload_decode
+  t->testEqual(`decode InlineBoo`, decodedBoo, Ok(Variants.InlineBoo({a: "Bo"})))
+
+  let encodedBar = Variants.InlineBar({x: true})->Variants.inlineRecordPayload_encode
+  t->testEqual(
+    `encode InlineBar`,
+    encodedBar,
+    JSON.Array([JSON.String("InlineBar"), JSON.Object(dict{"x": JSON.Boolean(true)})]),
+  )
+
+  let decodedBar =
+    JSON.Array([JSON.String("InlineBar"), JSON.Object(dict{"x": JSON.Boolean(true)})])
+    ->Variants.inlineRecordPayload_decode
+  t->testEqual(`decode InlineBar`, decodedBar, Ok(Variants.InlineBar({x: true})))
+})
+
+zoraBlock("variant inline record payload field errors include payload index", t => {
+  let decodedInvalid =
+    JSON.Array([JSON.String("InlineBoo"), JSON.Object(dict{"a": JSON.Number(1.0)})])
+    ->Variants.inlineRecordPayload_decode
+
+  t->test("decode invalid inline record field includes [1] path prefix", async t => {
+    switch decodedInvalid {
+    | Error({path, message, value}) => {
+        t->equal(path, "[1].a", "path")
+        t->equal(message, "Not a string", "message")
+        t->equal(value, JSON.Number(1.0), "value")
+      }
+    | Ok(_) => t->fail("expected decode to fail")
+    }
+  })
+
+  let decodedMissing =
+    JSON.Array([JSON.String("InlineBoo"), JSON.Object(dict{})])
+    ->Variants.inlineRecordPayload_decode
+
+  t->test("decode missing inline record field includes [1] path prefix", async t => {
+    switch decodedMissing {
+    | Error({path, message, value}) => {
+        t->equal(path, "[1].a", "path")
+        t->equal(message, "a missing", "message")
+        t->equal(value, JSON.Object(dict{}), "value")
+      }
+    | Ok(_) => t->fail("expected decode to fail")
+    }
+  })
+})
+
+zoraBlock("variant inline record payload optional fields", t => {
+  let value = Variants.InlineOptional({name: "payload", maybe: None})
+  let json = JSON.Array([
+    JSON.String("InlineOptional"),
+    JSON.Object(dict{"name": JSON.String("payload")}),
+  ])
+
+  let encoded = value->Variants.inlineRecordWithOptional_encode
+  t->testEqual(`encode omitted inline record option fields`, encoded, json)
+
+  let decoded = json->Variants.inlineRecordWithOptional_decode
+  t->test("decode omitted inline record option fields", async t => {
+    switch decoded {
+    | Ok(Variants.InlineOptional({name, maybe, optional: ?optional})) => {
+        t->equal(name, "payload", "name")
+        t->equal(maybe, None, "maybe")
+        t->equal(optional, None, "optional")
+      }
+    | Error(_) => t->fail("expected decode to succeed")
+    }
+  })
+
+  let value = Variants.InlineOptional({
+    name: "payload",
+    maybe: Some("maybe"),
+    optional: "optional",
+  })
+  let json = JSON.Array([
+    JSON.String("InlineOptional"),
+    JSON.Object(dict{
+      "name": JSON.String("payload"),
+      "maybe": JSON.String("maybe"),
+      "optional": JSON.String("optional"),
+    }),
+  ])
+
+  let encoded = value->Variants.inlineRecordWithOptional_encode
+  t->testEqual(`encode present inline record option fields`, encoded, json)
+
+  let decoded = json->Variants.inlineRecordWithOptional_decode
+  t->testEqual(`decode present inline record option fields`, decoded, Ok(value))
+})
+
+zoraBlock("variant inline record payload field attributes", t => {
+  let value = Variants.InlineAttrs({id: "u1", name: "Ada"})
+  let json = JSON.Array([
+    JSON.String("InlineAttrs"),
+    JSON.Object(dict{"user_id": JSON.String("u1"), "name": JSON.String("Ada")}),
+  ])
+
+  let encoded = value->Variants.inlineRecordWithAttrs_encode
+  t->testEqual(`encode inline record @spice.key`, encoded, json)
+
+  let decoded = json->Variants.inlineRecordWithAttrs_decode
+  t->testEqual(`decode inline record @spice.key`, decoded, Ok(value))
+
+  let defaultJson = JSON.Array([
+    JSON.String("InlineAttrs"),
+    JSON.Object(dict{"user_id": JSON.String("u1")}),
+  ])
+  let decodedDefault = defaultJson->Variants.inlineRecordWithAttrs_decode
+  t->testEqual(
+    `decode inline record @spice.default`,
+    decodedDefault,
+    Ok(Variants.InlineAttrs({id: "u1", name: "anonymous"})),
+  )
+
+  let decodedInvalid =
+    JSON.Array([JSON.String("InlineAttrs"), JSON.Object(dict{"user_id": JSON.Number(1.0)})])
+    ->Variants.inlineRecordWithAttrs_decode
+  t->test("decode invalid keyed inline record field uses JSON key in path", async t => {
+    switch decodedInvalid {
+    | Error({path, message, value}) => {
+        t->equal(path, "[1].user_id", "path")
+        t->equal(message, "Not a string", "message")
+        t->equal(value, JSON.Number(1.0), "value")
+      }
+    | Ok(_) => t->fail("expected decode to fail")
+    }
+  })
+})
+
+zoraBlock("variant inline record payload generic field", t => {
+  let value: Variants.inlineRecordGeneric<int> = Variants.InlineGeneric({value: 42})
+  let json = JSON.Array([
+    JSON.String("InlineGeneric"),
+    JSON.Object(dict{"value": JSON.Number(42.0)}),
+  ])
+
+  let encoded =
+    (
+      Variants.inlineRecordGeneric_encode :> (
+        int => JSON.t
+      ) => Variants.inlineRecordGeneric<int> => JSON.t
+    )(Spice.intToJson)(value)
+  t->testEqual(`encode generic inline record payload`, encoded, json)
+
+  let decoded =
+    (
+      Variants.inlineRecordGeneric_decode :> (
+        JSON.t => result<int, Spice.decodeError>
+      ) => JSON.t => result<Variants.inlineRecordGeneric<int>, Spice.decodeError>
+    )(Spice.intFromJson)(json)
+  t->testEqual(`decode generic inline record payload`, decoded, Ok(value))
+})
+
+zoraBlock("unboxed variant with inline record payload", t => {
+  let encoded = Variants.InlineUnboxed({a: "Bo"})->Variants.inlineRecordUnboxed_encode
+  t->testEqual(`encode unboxed inline record`, encoded, JSON.Object(dict{"a": JSON.String("Bo")}))
+
+  let decoded = JSON.Object(dict{"a": JSON.String("Bo")})->Variants.inlineRecordUnboxed_decode
+  t->testEqual(`decode unboxed inline record`, decoded, Ok(Variants.InlineUnboxed({a: "Bo"})))
+
+  let many = Variants.InlineUnboxedMany({a: "Bo", b: 1})
+  let manyJson = JSON.Object(dict{"a": JSON.String("Bo"), "b": JSON.Number(1.0)})
+  let encodedMany = many->Variants.inlineRecordUnboxedMany_encode
+  t->testEqual(`encode unboxed inline record with multiple fields`, encodedMany, manyJson)
+
+  let decodedMany = manyJson->Variants.inlineRecordUnboxedMany_decode
+  t->testEqual(`decode unboxed inline record with multiple fields`, decodedMany, Ok(many))
+})
+
 zoraBlock("variant error path includes correct index", t => {
   // Variant with args: ["WithArgs", int, string]
   // Index 0 is the constructor name, index 1 is the int, index 2 is the string
