@@ -10,20 +10,63 @@ type parsed_decl = {
   constr_decl : Parsetree.constructor_declaration;
 }
 
+let generate_constructor_json_expr constructor_expr =
+  match constructor_expr with
+  | { pexp_desc = Pexp_constant const; pexp_loc } -> (
+      match const with
+      | Pconst_string _ -> [%expr JSON.String [%e constructor_expr]]
+      | Pconst_float _ -> [%expr JSON.Number [%e constructor_expr]]
+      | Pconst_integer _ -> [%expr JSON.Number [%e constructor_expr]]
+      | _ -> fail pexp_loc "cannot find a name??!")
+  | { pexp_loc } -> fail pexp_loc "cannot find a name???"
+
+let is_optional_field { pld_attributes } =
+  [ "ns.optional"; "res.optional" ]
+  |> List.map (fun attr -> get_attribute_by_name pld_attributes attr)
+  |> List.exists (function Ok (Some _) -> true | _ -> false)
+
+let generate_inline_record_payload_pattern fields =
+  fields
+  |> List.map
+       (fun ({ pld_name = { txt; loc } } as field) ->
+         let attrs =
+           if is_optional_field field then [ Utils.attr_optional ] else []
+         in
+         (lid txt, Pat.var ~loc ~attrs (mkloc txt loc)))
+  |> fun fields -> Pat.record fields Asttypes.Closed
+
+let prefix_payload_decode_error expr =
+  [%expr
+    match [%e expr] with
+    | Ok v -> Ok v
+    | Error (e : Spice.decodeError) ->
+        Error { e with path = [%e index_const 1] ^ e.path }]
+
+let generate_inline_record_payload_decoder generator_settings fields name =
+  [%expr
+    let v = Array.getUnsafe json_arr 1 in
+    match (v : JSON.t) with
+    | JSON.Object dict ->
+        [%e Records.generate_inline_record_decoder_expr generator_settings fields name]
+    | _ -> Spice.error "Not an object" v]
+  |> prefix_payload_decode_error
+
+let generate_unboxed_inline_record_decoder generator_settings fields name =
+  Utils.expr_func ~arity:1
+    [%expr
+      fun v ->
+        match (v : JSON.t) with
+        | JSON.Object dict ->
+            [%e
+              Records.generate_inline_record_decoder_expr generator_settings fields
+                name]
+        | _ -> Spice.error "Not an object" v]
+
 let generate_encoder_case generator_settings unboxed has_attr_as
     { name; alias = constructor_expr; constr_decl = { pcd_args; pcd_loc } } =
   match pcd_args with
   | Pcstr_tuple args ->
-      let json_expr =
-        match constructor_expr with
-        | { pexp_desc = Pexp_constant const; pexp_loc } -> (
-            match const with
-            | Pconst_string _ -> [%expr JSON.String [%e constructor_expr]]
-            | Pconst_float _ -> [%expr JSON.Number [%e constructor_expr]]
-            | Pconst_integer _ -> [%expr JSON.Number [%e constructor_expr]]
-            | _ -> fail pexp_loc "cannot find a name??!")
-        | { pexp_loc } -> fail pexp_loc "cannot find a name???"
-      in
+      let json_expr = generate_constructor_json_expr constructor_expr in
       let lhs_vars =
         match args with
         | [] -> None
@@ -53,7 +96,23 @@ let generate_encoder_case generator_settings unboxed has_attr_as
            else if has_attr_as then json_expr
            else [%expr JSON.Array [%e rhs_list |> Exp.array]]);
       }
-  | Pcstr_record _ -> fail pcd_loc "This syntax is not yet implemented by spice"
+  | Pcstr_record fields ->
+      let json_expr = generate_constructor_json_expr constructor_expr in
+      let payload_expr =
+        Records.generate_inline_record_encoder_expr generator_settings fields
+      in
+      let rhs_list = [ json_expr; payload_expr ] in
+
+      {
+        pc_lhs =
+          Pat.construct (lid name)
+            (Some (generate_inline_record_payload_pattern fields));
+        pc_guard = None;
+        pc_rhs =
+          (if unboxed then payload_expr
+           else if has_attr_as then json_expr
+           else [%expr JSON.Array [%e rhs_list |> Exp.array]]);
+      }
 
 let generate_decode_success_case num_args constructor_name =
   {
@@ -96,7 +155,7 @@ let generate_arg_decoder generator_settings args constructor_name =
        |> tuple_or_singleton Exp.tuple)
 
 let generate_decoder_case generator_settings
-    { pcd_name = { txt = name }; pcd_args; pcd_loc } =
+    { pcd_name = { txt = name }; pcd_args; _ } =
   match pcd_args with
   | Pcstr_tuple args ->
       let arg_len =
@@ -122,7 +181,23 @@ let generate_decoder_case generator_settings
               Spice.error "Invalid number of arguments to variant constructor" v
             else [%e decoded]];
       }
-  | Pcstr_record _ -> fail pcd_loc "This syntax is not yet implemented by spice"
+  | Pcstr_record fields ->
+      let arg_len = Pconst_integer ("2", None) |> Exp.constant in
+      let decoded =
+        generate_inline_record_payload_decoder generator_settings fields name
+      in
+
+      {
+        pc_lhs =
+          ( Pconst_string (name, Location.none, None) |> Pat.constant |> fun v ->
+            Some v |> Pat.construct (lid "JSON.String") );
+        pc_guard = None;
+        pc_rhs =
+          [%expr
+            if Array.length json_arr <> [%e arg_len] then
+              Spice.error "Invalid number of arguments to variant constructor" v
+            else [%e decoded]];
+      }
 
 let generate_decoder_case_attr ~is_string generator_settings
     { name; alias; constr_decl = { pcd_args; pcd_loc } } =
@@ -174,7 +249,8 @@ let generate_unboxed_decode generator_settings
                    [%expr fun v -> Result.map ([%e d] v) [%e inline_fun_expr]])
           | None -> None)
       | _ -> fail pcd_loc "Expected exactly one type argument")
-  | Pcstr_record _ -> fail pcd_loc "This syntax is not yet implemented by spice"
+  | Pcstr_record fields ->
+      Some (generate_unboxed_inline_record_decoder generator_settings fields name)
 
 let parse_decl _generator_settings
     ({ pcd_name = { txt }; pcd_loc; pcd_attributes } as constr_decl) =
@@ -195,6 +271,11 @@ let validate_spice_as_payload unboxed parsed_decls =
          (fun { has_attr_as; constr_decl = { pcd_args; pcd_loc }; _ } ->
            match (has_attr_as, pcd_args) with
            | true, Pcstr_tuple (_ :: _) ->
+               fail pcd_loc
+                 "@spice.as is only supported on constructors without payload; \
+                  use the default tagged array encoding or @unboxed for \
+                  single-payload variants"
+           | true, Pcstr_record _ ->
                fail pcd_loc
                  "@spice.as is only supported on constructors without payload; \
                   use the default tagged array encoding or @unboxed for \

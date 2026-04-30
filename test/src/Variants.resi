@@ -21,6 +21,33 @@ type optionPayloadVariant =
   | A
   | B(option<string>)
 
+@spice
+type inlineRecordPayload =
+  | InlineBoo({a: string})
+  | InlineBar({x: bool})
+
+@spice
+type inlineRecordWithOptional = InlineOptional({
+  name: string,
+  maybe: option<string>,
+  optional?: string,
+})
+
+@spice
+type inlineRecordWithAttrs = InlineAttrs({
+  @spice.key("user_id") id: string,
+  @spice.default("anonymous") name: string,
+})
+
+@spice
+type inlineRecordGeneric<'a> = InlineGeneric({value: 'a})
+
+@spice @unboxed
+type inlineRecordUnboxed = InlineUnboxed({a: string})
+
+@spice @unboxed
+type inlineRecordUnboxedMany = InlineUnboxedMany({a: string, b: int})
+
 // Types for testing error paths
 @spice.decode
 type withArgs = WithArgs(int, string)

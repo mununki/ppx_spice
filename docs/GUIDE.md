@@ -90,6 +90,18 @@ let data = %raw(`
 `)
 ```
 
+Inline record payloads use the same tagged array encoding, with the record encoded as the payload object.
+
+```rescript
+@spice
+type thing =
+  | Boo({a: string})
+  | Bar({x: bool})
+
+let encoded = Boo({a: "Bo"})->thing_encode
+// ["Boo", {"a": "Bo"}]
+```
+
 ### Option and Null
 
 In records, `option<T>` fields and optional fields encode `None` by omitting the object key. A missing key decodes to `None`. A present JSON `null` is decoded by `T`; for example, `option<string>` fails on `null` because `string` cannot decode `null`. Use `Null.t<T>` when a present JSON `null` is a valid value.
