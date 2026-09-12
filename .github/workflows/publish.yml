@@ -6,9 +6,6 @@ on:
       ref:
         description: "Branch or tag to build and publish from"
         required: false
-      repository:
-        description: "owner/repo to check out (use fork to test external PRs)"
-        required: false
       npm_tag:
         description: "npm dist-tag to publish under (e.g., latest, next)"
         required: false
@@ -16,12 +13,10 @@ on:
 
 env:
   TARGET_REF: ${{ github.event.inputs.ref || github.ref }}
-  TARGET_REPO: ${{ github.event.inputs.repository || github.repository }}
   NPM_TAG: ${{ github.event.inputs.npm_tag || 'latest' }}
 
 permissions:
-  id-token: write # Required for OIDC publish to npm
-  contents: write # Required for creating GitHub releases
+  contents: read
 
 jobs:
   build_linux_x64:
@@ -37,8 +32,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          repository: ${{ env.TARGET_REPO }}
           ref: ${{ env.TARGET_REF }}
+          persist-credentials: false
 
       - name: Opam init
         run: opam init -a --disable-sandboxing --compiler=4.14.2
@@ -67,8 +62,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          repository: ${{ env.TARGET_REPO }}
           ref: ${{ env.TARGET_REF }}
+          persist-credentials: false
 
       # GitHub JavaScript actions are not supported inside Alpine containers
       # on Linux arm64. Run actions on the host and only build inside Alpine.
@@ -103,8 +98,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          repository: ${{ env.TARGET_REPO }}
           ref: ${{ env.TARGET_REF }}
+          persist-credentials: false
 
       - name: Use OCaml ${{ env.ocaml-compiler }}
         uses: ocaml/setup-ocaml@v3
@@ -140,8 +135,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          repository: ${{ env.TARGET_REPO }}
           ref: ${{ env.TARGET_REF }}
+          persist-credentials: false
 
       - name: Use OCaml ${{ env.ocaml-compiler }}
         uses: ocaml/setup-ocaml@v3
@@ -180,8 +175,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          repository: ${{ env.TARGET_REPO }}
           ref: ${{ env.TARGET_REF }}
+          persist-credentials: false
 
       - name: Use OCaml ${{ matrix.ocaml-compiler}}
         uses: ocaml/setup-ocaml@v3
@@ -214,11 +209,14 @@ jobs:
       - build_windows
     name: (only on release) Publish
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Required for OIDC publish to npm
+      contents: write # Required for creating GitHub releases
     steps:
       - uses: actions/checkout@v6
         with:
-          repository: ${{ env.TARGET_REPO }}
           ref: ${{ env.TARGET_REF }}
+          persist-credentials: false
       - uses: actions/setup-node@v6
         with:
           node-version: 20
