@@ -290,7 +290,7 @@ jobs:
           fi
 
       - name: Create GitHub Release
-        if: success() && startsWith(env.TARGET_REF, 'refs/tags/') || startsWith(env.TARGET_REF, 'v')
+        if: success() && (startsWith(env.TARGET_REF, 'refs/tags/') || startsWith(env.TARGET_REF, 'v'))
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.TARGET_REF }}
