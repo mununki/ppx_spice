@@ -3,23 +3,12 @@ name: ppx_spice build linux
 on: [workflow_dispatch]
 
 jobs:
-  build_linux:
-    name: Linux ${{ matrix.arch }}
-    runs-on: ${{ matrix.runner }}
+  build_linux_x64:
+    name: Linux x64
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: src
-    strategy:
-      matrix:
-        include:
-          - arch: x64
-            runner: ubuntu-latest
-            artifact: linux-x64
-            ocaml-compiler: 4.14.2
-          - arch: arm64
-            runner: ubuntu-24.04-arm
-            artifact: linux-arm64
-            ocaml-compiler: 4.14.2
     container:
       image: ocaml/opam:alpine-3.16-ocaml-4.14
       options: --user root
@@ -40,9 +29,37 @@ jobs:
         run: |
           mv ./_build/default/bin/bin.exe ppx.exe
 
-      - name: (only on release) Upload artifacts ${{ matrix.artifact }}
+      - name: Upload artifacts linux-x64
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.artifact }}
+          name: linux-x64
+          path: src/ppx.exe
+          if-no-files-found: error
+
+  build_linux_arm64:
+    name: Linux arm64
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - uses: actions/checkout@v6
+
+      # GitHub JavaScript actions are not supported inside Alpine containers
+      # on Linux arm64. Run actions on the host and only build inside Alpine.
+      - name: Build static PPX in Alpine
+        run: |
+          docker run --rm --user root --entrypoint sh \
+            -v "${{ github.workspace }}:/work" -w /work/src \
+            ocaml/opam:alpine-3.16-ocaml-4.14 -ec '
+              opam init -a --disable-sandboxing --compiler=4.14.2
+              opam install . --deps-only --with-test -y
+              opam exec -- dune build --profile static
+              cp _build/default/bin/bin.exe ppx.exe
+              chmod 755 ppx.exe
+            '
+
+      - name: Upload artifacts linux-arm64
+        uses: actions/upload-artifact@v7
+        with:
+          name: linux-arm64
           path: src/ppx.exe
           if-no-files-found: error
