@@ -2,10 +2,9 @@
 
 # Unreleased
 
+# 0.5.0
+
 - Support inline record variant payloads, including field attributes, optional fields, generic fields, and unboxed single-constructor variants. https://github.com/mununki/ppx_spice/pull/125
-
-# 0.4.2
-
 - Add Linux arm64 release binaries and package installation support.
 
 # 0.4.1
