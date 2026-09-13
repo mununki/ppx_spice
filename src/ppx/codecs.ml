@@ -1,4 +1,4 @@
-open Ppxlib
+open Rescript_ppxlib
 open Parsetree
 open Ast_helper
 open Utils
@@ -8,7 +8,7 @@ type encode_context = Optional_context | Value_context
 let apply_partial func args =
   args
   |> List.map (fun e -> (Asttypes.Nolabel, e))
-  |> Exp.apply ~attrs:[ attr_partial ] func
+  |> Exp.apply ~partial:true func
 
 let is_dict_identifier = function
   | Longident.Lident "dict"
@@ -22,7 +22,7 @@ let rec parameterize_value_codecs type_args encoder_func decoder_func
   let sub_encoders, sub_decoders =
     type_args
     |> List.map (fun core_type ->
-           generate_codecs_for Value_context generator_settings core_type)
+        generate_codecs_for Value_context generator_settings core_type)
     |> List.split
   in
   ( (match encoder_func with
@@ -30,14 +30,14 @@ let rec parameterize_value_codecs type_args encoder_func decoder_func
     | Some encoder_func ->
         sub_encoders
         |> List.map (fun e -> (Asttypes.Nolabel, Option.get e))
-        |> Exp.apply ~attrs:[ attr_partial ] encoder_func
+        |> Exp.apply ~partial:true encoder_func
         |> Option.some),
     match decoder_func with
     | None -> None
     | Some decoder_func ->
         sub_decoders
         |> List.map (fun e -> (Asttypes.Nolabel, Option.get e))
-        |> Exp.apply ~attrs:[ attr_partial ] decoder_func
+        |> Exp.apply ~partial:true decoder_func
         |> Option.some )
 
 and generate_constr_codecs context { do_encode; do_decode; _ }
@@ -113,9 +113,7 @@ and generate_constr_codecs context { do_encode; do_decode; _ }
              | Value_context -> Utils.value_encoder_func_suffix
              | Optional_context -> Utils.encoder_func_suffix
            in
-           Some
-             (Exp.ident
-                (mknoloc (Ldot (left, right ^ suffix))))
+           Some (Exp.ident (mknoloc (Ldot (left, right ^ suffix))))
          else None),
         if do_decode then
           Some
@@ -138,7 +136,9 @@ and generate_dict_codecs ({ do_encode; do_decode } as generator_settings)
         apply_partial [%expr Spice.optionFromJson] [ Option.get inner_decode ]
       in
       ( (if do_encode then
-           Some (apply_partial [%expr Spice.dictOptionalToJson] [ optional_value_encoder ])
+           Some
+             (apply_partial [%expr Spice.dictOptionalToJson]
+                [ optional_value_encoder ])
          else None),
         if do_decode then
           Some (apply_partial [%expr Spice.dictFromJson] [ value_decoder ])
@@ -149,13 +149,11 @@ and generate_dict_codecs ({ do_encode; do_decode } as generator_settings)
         (if do_decode then Some [%expr Spice.dictFromJson] else None)
         generator_settings
 
-and generate_codecs_for context
-    ({ do_encode; do_decode } as generator_settings)
+and generate_codecs_for context ({ do_encode; do_decode } as generator_settings)
     { ptyp_desc; ptyp_loc; ptyp_attributes } =
   match ptyp_desc with
   | Ptyp_any -> fail ptyp_loc "Can't generate codecs for `any` type"
-  | Ptyp_arrow (_, _, _) ->
-      fail ptyp_loc "Can't generate codecs for function type"
+  | Ptyp_arrow _ -> fail ptyp_loc "Can't generate codecs for function type"
   | Ptyp_package _ -> fail ptyp_loc "Can't generate codecs for module type"
   | Ptyp_tuple types ->
       let composite_codecs =
@@ -183,29 +181,32 @@ and generate_codecs_for context
       match (custom_codec, is_dict_identifier constr.txt, typeArgs) with
       | Ok None, true, [ value_type ] ->
           generate_dict_codecs generator_settings value_type
-      | _ ->
-      let encode, decode =
-        match custom_codec with
-        | Ok None -> generate_constr_codecs context generator_settings constr
-        | Ok (Some attribute) ->
-            let expr = get_expression_from_payload attribute in
-            ( (if do_encode then
-                 Some
-                   [%expr
-                     let e, _ = [%e expr] in
-                     e]
-               else None),
-              if do_decode then
-                Some
-                  [%expr
-                    let _, d = [%e expr] in
-                    d]
-              else None )
-        | Error s -> fail ptyp_loc s
-      in
-      match List.length typeArgs = 0 with
-      | true -> (encode, decode)
-      | false -> parameterize_value_codecs typeArgs encode decode generator_settings)
+      | _ -> (
+          let encode, decode =
+            match custom_codec with
+            | Ok None ->
+                generate_constr_codecs context generator_settings constr
+            | Ok (Some attribute) ->
+                let expr = get_expression_from_payload attribute in
+                ( (if do_encode then
+                     Some
+                       [%expr
+                         let e, _ = [%e expr] in
+                         e]
+                   else None),
+                  if do_decode then
+                    Some
+                      [%expr
+                        let _, d = [%e expr] in
+                        d]
+                  else None )
+            | Error s -> fail ptyp_loc s
+          in
+          match List.length typeArgs = 0 with
+          | true -> (encode, decode)
+          | false ->
+              parameterize_value_codecs typeArgs encode decode
+                generator_settings))
   | _ -> fail ptyp_loc "This syntax is not yet handled by spice"
 
 let generate_codecs generator_settings core_type =

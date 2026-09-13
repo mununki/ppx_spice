@@ -1,9 +1,10 @@
-open Ppxlib
+open Rescript_ppxlib
 open Parsetree
 open Utils
 
 let ctyp_optional_json_t =
-  Ast_helper.Typ.constr (mknoloc (Longident.Lident "option"))
+  Ast_helper.Typ.constr
+    (mknoloc (Longident.Lident "option"))
     [ Utils.ctyp_json_t ]
 
 let rec add_encoder_params param_names result_type =
@@ -46,18 +47,17 @@ let generate_sig_decls { do_encode; do_decode } type_name param_names
         let decls =
           decls
           @ [
-            [%type: [%t value_type] -> [%t encoder_result_type]]
-            |> Utils.ctyp_arrow ~arity:1
-            |> add_encoder_params (List.rev param_names)
-            |> Ast_helper.Val.mk (mknoloc encoder_pat)
-            |> Ast_helper.Sig.value;
-          ]
+              [%type: [%t value_type] -> [%t encoder_result_type]]
+              |> Utils.ctyp_arrow ~arity:1
+              |> add_encoder_params (List.rev param_names)
+              |> Ast_helper.Val.mk (mknoloc encoder_pat)
+              |> Ast_helper.Sig.value;
+            ]
         in
         if has_value_encoder then
           decls
           @ [
-              [%type: [%t value_type] -> JSON.t]
-              |> Utils.ctyp_arrow ~arity:1
+              [%type: [%t value_type] -> JSON.t] |> Utils.ctyp_arrow ~arity:1
               |> add_encoder_params (List.rev param_names)
               |> Ast_helper.Val.mk (mknoloc value_encoder_pat)
               |> Ast_helper.Sig.value;

@@ -1,5 +1,6 @@
-open Ppxlib
+open Rescript_ppxlib
 open Parsetree
+open Longident
 open Ast_helper
 
 let annotation_name = "spice"
@@ -21,8 +22,7 @@ let tuple_or_singleton tuple l =
 
 let get_attribute_by_name attributes name =
   let filtered =
-    attributes
-    |> List.filter (fun { attr_name = { Location.txt } } -> txt = name)
+    attributes |> List.filter (fun ({ Location.txt; _ }, _) -> txt = name)
   in
   match filtered with
   | [] -> Ok None
@@ -31,8 +31,7 @@ let get_attribute_by_name attributes name =
 
 type generator_settings = { do_encode : bool; do_decode : bool }
 
-let make_generator_settings ~do_encode ~do_decode =
-  { do_encode; do_decode }
+let make_generator_settings ~do_encode ~do_decode = { do_encode; do_decode }
 
 let get_generator_settings_from_attributes attributes =
   match get_attribute_by_name attributes annotation_name with
@@ -54,8 +53,7 @@ let get_generator_settings_from_attributes attributes =
       Ok (Some (make_generator_settings ~do_encode:true ~do_decode:true))
   | Error _ as e -> e
 
-let get_expression_from_payload { attr_name = { loc }; attr_payload = payload }
-    =
+let get_expression_from_payload (({ loc; _ }, payload) : attribute) =
   match payload with
   | PStr [ { pstr_desc } ] -> (
       match pstr_desc with
@@ -66,11 +64,11 @@ let get_expression_from_payload { attr_name = { loc }; attr_payload = payload }
 let get_param_names params =
   params
   |> List.map (fun ({ ptyp_desc; ptyp_loc }, _) ->
-         match ptyp_desc with
-         | Ptyp_var s -> s
-         | _ ->
-             fail ptyp_loc "Unhandled param type" |> fun v ->
-             Location.Error v |> raise)
+      match ptyp_desc with
+      | Ptyp_var s -> s
+      | _ ->
+          fail ptyp_loc "Unhandled param type" |> fun v ->
+          Location.Error v |> raise)
 
 let get_string_from_expression { pexp_desc; pexp_loc } =
   match pexp_desc with
@@ -91,13 +89,11 @@ let get_float_from_expression { pexp_desc; pexp_loc } =
   | _ -> fail pexp_loc "cannot find a name??"
 
 let index_const i =
-  Pconst_string ("[" ^ string_of_int i ^ "]", Location.none, Some "*j")
-  |> Exp.constant
+  Pconst_string ("[" ^ string_of_int i ^ "]", Some "*j") |> Exp.constant
 
 let rec is_identifier_used_in_core_type type_name { ptyp_desc; ptyp_loc } =
   match ptyp_desc with
-  | Ptyp_arrow (_, _, _) ->
-      fail ptyp_loc "Can't generate codecs for function type"
+  | Ptyp_arrow _ -> fail ptyp_loc "Can't generate codecs for function type"
   | Ptyp_any -> fail ptyp_loc "Can't generate codecs for `any` type"
   | Ptyp_package _ -> fail ptyp_loc "Can't generate codecs for module type"
   | Ptyp_variant (_, _, _) -> fail ptyp_loc "Unexpected Ptyp_variant"
@@ -112,40 +108,22 @@ let rec is_identifier_used_in_core_type type_name { ptyp_desc; ptyp_loc } =
   | _ -> fail ptyp_loc "This syntax is not yet handled by spice"
 
 let attr_warning expr =
-  {
-    attr_name = mkloc "ocaml.warning" loc;
-    attr_payload = PStr [ { pstr_desc = Pstr_eval (expr, []); pstr_loc = loc } ];
-    attr_loc = loc;
-  }
-
-let attr_optional : Ppxlib.Parsetree.attribute =
-  {
-    attr_name = { txt = "res.optional"; loc = Location.none };
-    attr_payload = PStr [];
-    attr_loc = Location.none;
-  }
-
-let attr_partial : Ppxlib.Parsetree.attribute =
-  {
-    attr_name = { txt = "res.partial"; loc = Location.none };
-    attr_payload = PStr [];
-    attr_loc = Location.none;
-  }
+  ( mkloc "ocaml.warning" loc,
+    PStr [ { pstr_desc = Pstr_eval (expr, []); pstr_loc = loc } ] )
 
 let expr_func ?(loc = Location.none) ~arity e =
-  let attr_arity =
-    Attr.mk { txt = "res.arity"; loc }
-      (PStr [ Str.eval (Exp.constant (Const.int arity)) ])
-  in
-  Exp.construct ~attrs:[ attr_arity ] { txt = Lident "Function$"; loc } (Some e)
+  match e.pexp_desc with
+  | Pexp_fun fn ->
+      { e with pexp_desc = Pexp_fun { fn with arity = Some arity } }
+  | _ -> fail loc "Expected a function expression"
 
 let ctyp_json_t = Typ.constr (mknoloc (Ldot (Lident "JSON", "t"))) []
 
 let ctyp_arrow ?(loc = Location.none) ~arity ctyp =
-  let arity = "Has_arity" ^ string_of_int arity in
-  Typ.constr ~loc
-    (mknoloc @@ Lident "function$")
-    [ ctyp; Typ.variant [ Rf.tag (mknoloc arity) true [] ] Closed None ]
+  match ctyp.ptyp_desc with
+  | Ptyp_arrow arrow ->
+      { ctyp with ptyp_desc = Ptyp_arrow { arrow with arity = Some arity } }
+  | _ -> fail loc "Expected a function type"
 
 let check_option_type { ptyp_desc } =
   match ptyp_desc with

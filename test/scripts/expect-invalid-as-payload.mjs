@@ -6,7 +6,8 @@ const scriptDir = dirname(fileURLToPath(import.meta.url));
 const testRoot = dirname(scriptDir);
 const fixtureDir = join(testRoot, "fixtures", "invalid-as-payload");
 const binName = process.platform === "win32" ? "rescript.cmd" : "rescript";
-const rescriptBin = join(testRoot, "node_modules", ".bin", binName);
+const rescriptBin =
+  process.env.RESCRIPT_EXE ?? join(testRoot, "node_modules", ".bin", binName);
 const expected =
   "@spice.as is only supported on constructors without payload";
 

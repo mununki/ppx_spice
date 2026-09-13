@@ -1,3 +1,4 @@
+open Rescript_ppxlib
 open Parsetree
 open Ast_helper
 open Utils
@@ -28,9 +29,9 @@ let get_args_from_polyvars ~loc coreTypes =
          wrong"
 
 let generate_encoder_case generator_settings unboxed has_attr_as row =
-  let { name; alias = constructor_expr; row_field = { prf_desc } } = row in
-  match prf_desc with
-  | Rtag (_, _attributes, core_types) ->
+  let { name; alias = constructor_expr; row_field } = row in
+  match row_field with
+  | Rtag (_, _attributes, _constant, core_types) ->
       let json_expr =
         match constructor_expr with
         | { pexp_desc = Pexp_constant const; pexp_loc } -> (
@@ -49,7 +50,7 @@ let generate_encoder_case generator_settings unboxed has_attr_as row =
         | _ ->
             args
             |> List.mapi (fun i _ ->
-                   mkloc ("v" ^ string_of_int i) loc |> Pat.var)
+                mkloc ("v" ^ string_of_int i) loc |> Pat.var)
             |> Pat.tuple
             |> fun v -> Some v
       in
@@ -59,12 +60,13 @@ let generate_encoder_case generator_settings unboxed has_attr_as row =
         |> List.map (Codecs.generate_value_codecs generator_settings)
         |> List.map (fun (encoder, _) -> Option.get encoder)
         |> List.mapi (fun i e ->
-               Exp.apply ~loc e
-                 [ (Asttypes.Nolabel, make_ident_expr ("v" ^ string_of_int i)) ])
+            Exp.apply ~loc e
+              [ (Asttypes.Nolabel, make_ident_expr ("v" ^ string_of_int i)) ])
         |> List.append [ json_expr ]
       in
 
       {
+        pc_bar = None;
         pc_lhs = Pat.variant name lhs_vars;
         pc_guard = None;
         pc_rhs =
@@ -78,6 +80,7 @@ let generate_encoder_case generator_settings unboxed has_attr_as row =
 
 let generate_decode_success_case num_args constructor_name =
   {
+    pc_bar = None;
     pc_lhs =
       Array.init num_args (fun i ->
           mknoloc ("v" ^ string_of_int i) |> Pat.var |> fun p ->
@@ -103,21 +106,20 @@ let generate_arg_decoder generator_settings args constructor_name =
        (args
        |> List.map (Codecs.generate_value_codecs generator_settings)
        |> List.mapi (fun i (_, decoder) ->
-              Exp.apply (Option.get decoder)
-                [
-                  ( Asttypes.Nolabel,
-                    (* +1 because index 0 is the constructor *)
-                    let idx =
-                      Pconst_integer (string_of_int (i + 1), None)
-                      |> Exp.constant
-                    in
-                    [%expr Array.getUnsafe json_arr [%e idx]] );
-                ])
+           Exp.apply (Option.get decoder)
+             [
+               ( Asttypes.Nolabel,
+                 (* +1 because index 0 is the constructor *)
+                 let idx =
+                   Pconst_integer (string_of_int (i + 1), None) |> Exp.constant
+                 in
+                 [%expr Array.getUnsafe json_arr [%e idx]] );
+             ])
        |> tuple_or_singleton Exp.tuple)
 
-let generate_decoder_case generator_settings { prf_desc } =
-  match prf_desc with
-  | Rtag ({ txt }, _, core_types) ->
+let generate_decoder_case generator_settings row_field =
+  match row_field with
+  | Rtag ({ txt; loc }, _, _, core_types) ->
       let args = get_args_from_polyvars ~loc core_types in
       let arg_len =
         Pconst_integer (string_of_int (List.length args + 1), None)
@@ -132,9 +134,10 @@ let generate_decoder_case generator_settings { prf_desc } =
       in
 
       {
+        pc_bar = None;
         pc_lhs =
-          ( Pconst_string (txt, Location.none, None) |> Pat.constant |> fun v ->
-            Some ([], v) |> Pat.construct (lid "JSON.String") );
+          ( Pconst_string (txt, None) |> Pat.constant |> fun v ->
+            Some v |> Pat.construct (lid "JSON.String") );
         pc_guard = None;
         pc_rhs =
           [%expr
@@ -147,9 +150,9 @@ let generate_decoder_case generator_settings { prf_desc } =
       fail core_type.ptyp_loc "This syntax is not yet implemented by spice"
 
 let generate_decoder_case_attr ~is_string generator_settings row =
-  let { alias; row_field = { prf_desc } } = row in
-  match prf_desc with
-  | Rtag ({ txt }, _, core_types) -> (
+  let { alias; row_field } = row in
+  match row_field with
+  | Rtag ({ txt; loc }, _, _, core_types) -> (
       let args = get_args_from_polyvars ~loc core_types in
       let const =
         if is_string then get_string_from_expression alias
@@ -166,7 +169,7 @@ let generate_decoder_case_attr ~is_string generator_settings row =
       match const with
       | Some const ->
           let if' =
-            Exp.apply (make_ident_expr "=")
+            Exp.apply (make_ident_expr "==")
               [
                 (Asttypes.Nolabel, Exp.constant const);
                 (Asttypes.Nolabel, [%expr str_or_num]);
@@ -179,9 +182,9 @@ let generate_decoder_case_attr ~is_string generator_settings row =
   | Rinherit core_type ->
       fail core_type.ptyp_loc "This syntax is not yet implemented by spice"
 
-let generate_unboxed_decode generator_settings { prf_desc } =
-  match prf_desc with
-  | Rtag ({ txt; loc }, _, args) -> (
+let generate_unboxed_decode generator_settings row_field =
+  match row_field with
+  | Rtag ({ txt; loc }, _, _, args) -> (
       match args with
       | [ a ] -> (
           let _, d = Codecs.generate_value_codecs generator_settings a in
@@ -198,19 +201,19 @@ let generate_unboxed_decode generator_settings { prf_desc } =
   | Rinherit coreType ->
       fail coreType.ptyp_loc "This syntax is not yet implemented by spice"
 
-let parse_decl ({ prf_desc; prf_loc; prf_attributes } as row_field) =
-  let txt =
-    match prf_desc with
-    | Rtag ({ txt }, _, _) -> txt
-    | _ -> failwith "cannot get polymorphic variant constructor"
+let parse_decl row_field =
+  let txt, row_loc, row_attributes =
+    match row_field with
+    | Rtag ({ txt; loc }, attributes, _, _) -> (txt, loc, attributes)
+    | Rinherit typ ->
+        fail typ.ptyp_loc "cannot get polymorphic variant constructor"
   in
 
   let alias, has_attr_as =
-    match get_attribute_by_name prf_attributes "spice.as" with
+    match get_attribute_by_name row_attributes "spice.as" with
     | Ok (Some attribute) -> (get_expression_from_payload attribute, true)
-    | Ok None ->
-        (Exp.constant (Pconst_string (txt, Location.none, Some "*j")), false)
-    | Error s -> (fail prf_loc s, false)
+    | Ok None -> (Exp.constant (Pconst_string (txt, Some "*j")), false)
+    | Error s -> (fail row_loc s, false)
   in
 
   { name = txt; alias; has_attr_as; row_field }
@@ -235,7 +238,7 @@ let generate_codecs ({ do_encode; do_decode } as generator_settings) row_fields
            (generate_encoder_case generator_settings unboxed has_attr_as)
            parsed_fields
         |> Exp.match_ [%expr v]
-        |> Exp.fun_ Asttypes.Nolabel None [%pat? v]
+        |> Exp.fun_ ~arity:(Some 1) Asttypes.Nolabel None [%pat? v]
         |> Utils.expr_func ~arity:1)
     else None
   in
@@ -280,6 +283,7 @@ let generate_codecs ({ do_encode; do_decode } as generator_settings) row_fields
         else
           let decoder_default_case =
             {
+              pc_bar = None;
               pc_lhs = [%pat? _];
               pc_guard = None;
               pc_rhs =

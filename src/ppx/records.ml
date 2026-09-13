@@ -1,4 +1,4 @@
-open Ppxlib
+open Rescript_ppxlib
 open Parsetree
 open Ast_helper
 open Utils
@@ -26,9 +26,9 @@ let generate_object_encoder_expr decls =
            else
              [%expr
                [%e key],
-                 (* The Encoder for option `Spice.optionToJson` returns option type.
+               (* The Encoder for option `Spice.optionToJson` returns option type.
                       So, encoder for other types return with Some to match type of encoder. *)
-                 Some ([%e Option.get encoder] [%e field])])
+               Some ([%e Option.get encoder] [%e field])])
     |> Exp.array
   in
   Exp.constraint_
@@ -43,7 +43,7 @@ let generate_encoder decls unboxed =
       Utils.expr_func ~arity:1 [%expr fun v -> [%e Option.get e] [%e field]]
   | false ->
       generate_object_encoder_expr decls
-      |> Exp.fun_ Asttypes.Nolabel None [%pat? v]
+      |> Exp.fun_ ~arity:(Some 1) Asttypes.Nolabel None [%pat? v]
       |> Utils.expr_func ~arity:1
 
 let generate_record_expr decls =
@@ -51,8 +51,7 @@ let generate_record_expr decls =
     List.map
       (fun d ->
         let { name; is_optional } = d in
-        let attrs = if is_optional then [ Utils.attr_optional ] else [] in
-        (lid name, make_ident_expr ~attrs name))
+        { lid = lid name; x = make_ident_expr name; opt = is_optional })
       decls
   in
   Exp.record record_fields None
@@ -73,17 +72,18 @@ let generate_nested_decoder ?ok_expr decls =
   let generate_decode_expr d =
     let { key; codecs; default; is_optional; is_option; _ } = d in
     match codecs with
-    | _, Some decode ->
+    | _, Some decode -> (
         let get_expr = [%expr Dict.get [%e dict_expr] [%e key]] in
         let decode_applied = [%expr [%e decode]] in
         let opt_map = [%expr Option.map [%e get_expr] [%e decode_applied]] in
-        (match (is_optional, is_option, default) with
+        match (is_optional, is_option, default) with
         | _, _, Some d -> [%expr Option.getOr [%e opt_map] (Ok [%e d])]
         | true, _, None -> [%expr Option.getOr [%e opt_map] (Ok None)]
         | _, true, None -> [%expr Option.getOr [%e opt_map] (Ok None)]
         | _, _, None ->
             [%expr
-              Option.getOr [%e opt_map] (Spice.error ([%e key] ^ " missing") v)])
+              Option.getOr [%e opt_map] (Spice.error ([%e key] ^ " missing") v)]
+        )
     | _ -> [%expr Spice.error ([%e key] ^ " missing") v]
   in
 
@@ -110,7 +110,8 @@ let generate_nested_decoder ?ok_expr decls =
                        (Typ.constr
                           (mknoloc (Longident.parse "Spice.decodeError"))
                           []))))
-              [%expr Spice.error ~path:("." ^ [%e key] ^ e.path) e.message e.value]
+              [%expr
+                Spice.error ~path:("." ^ [%e key] ^ e.path) e.message e.value]
           in
           let match_expr = Exp.match_ decode_expr [ ok_case; error_case ] in
           loop match_expr rest
@@ -120,8 +121,7 @@ let generate_nested_decoder ?ok_expr decls =
 
   build_nested_matches decls ok_expr
 
-let generate_nested_switches decls =
-  generate_nested_decoder decls
+let generate_nested_switches decls = generate_nested_decoder decls
 
 let generate_decoder decls unboxed =
   match unboxed with
@@ -129,7 +129,11 @@ let generate_decoder decls unboxed =
       let { codecs; name } = List.hd decls in
       let _, d = codecs in
 
-      let record_expr = Exp.record [ (lid name, make_ident_expr "v") ] None in
+      let record_expr =
+        Exp.record
+          [ { lid = lid name; x = make_ident_expr "v"; opt = false } ]
+          None
+      in
 
       Utils.expr_func ~arity:1
         [%expr
@@ -143,28 +147,28 @@ let generate_decoder decls unboxed =
             | _ -> Spice.error "Not an object" v]
 
 let wrap_decoder_with_some decode =
-  let wrap_some = Utils.expr_func ~arity:1 [%expr fun v -> Some(v)] in
+  let wrap_some = Utils.expr_func ~arity:1 [%expr fun v -> Some v] in
   Utils.expr_func ~arity:1
     [%expr fun json -> Result.map ([%e decode] json) [%e wrap_some]]
 
 let make_omittable_codecs codecs =
-  let add_attrs attrs e = { e with pexp_attributes = attrs } in
+  let make_partial e =
+    match e.pexp_desc with
+    | Pexp_apply apply ->
+        { e with pexp_desc = Pexp_apply { apply with partial = true } }
+    | _ -> fail e.pexp_loc "Expected an application"
+  in
   match codecs with
   | Some encode, Some decode ->
-      ( Some
-          (add_attrs [ Utils.attr_partial ]
-             [%expr Spice.optionToJson [%e encode]]),
+      ( Some (make_partial [%expr Spice.optionToJson [%e encode]]),
         Some (wrap_decoder_with_some decode) )
   | Some encode, None ->
-      ( Some
-          (add_attrs [ Utils.attr_partial ]
-             [%expr Spice.optionToJson [%e encode]]),
-        None )
+      (Some (make_partial [%expr Spice.optionToJson [%e encode]]), None)
   | None, Some decode -> (None, Some (wrap_decoder_with_some decode))
   | None, None -> codecs
 
 let parse_decl ?field generator_settings
-    { pld_name = { txt }; pld_loc; pld_type; pld_attributes } =
+    { pld_name = { txt }; pld_loc; pld_type; pld_attributes; pld_optional; _ } =
   let default =
     match get_attribute_by_name pld_attributes "spice.default" with
     | Ok (Some attribute) -> Some (get_expression_from_payload attribute)
@@ -174,20 +178,20 @@ let parse_decl ?field generator_settings
   let key =
     match get_attribute_by_name pld_attributes "spice.key" with
     | Ok (Some attribute) -> get_expression_from_payload attribute
-    | Ok None -> Exp.constant (Pconst_string (txt, Location.none, Some "*j"))
+    | Ok None -> Exp.constant (Pconst_string (txt, Some "*j"))
     | Error s -> fail pld_loc s
   in
   let optional_attrs = [ "ns.optional"; "res.optional" ] in
   let is_optional =
-    optional_attrs
-    |> List.map (fun attr -> get_attribute_by_name pld_attributes attr)
-    |> List.exists (function Ok (Some _) -> true | _ -> false)
+    pld_optional
+    || optional_attrs
+       |> List.map (fun attr -> get_attribute_by_name pld_attributes attr)
+       |> List.exists (function Ok (Some _) -> true | _ -> false)
   in
   let is_option = Utils.check_option_type pld_type in
   let codecs = Codecs.generate_value_codecs generator_settings pld_type in
   let codecs =
-    if is_optional then
-      make_omittable_codecs codecs
+    if is_optional then make_omittable_codecs codecs
     else if is_option then
       match pld_type.ptyp_desc with
       | Ptyp_constr ({ txt = Lident "option" }, [ inner_type ]) ->
@@ -218,10 +222,12 @@ let generate_inline_record_encoder_expr generator_settings decls =
   |> List.map (parse_inline_decl generator_settings)
   |> generate_object_encoder_expr
 
-let generate_inline_record_decoder_expr generator_settings decls constructor_name =
+let generate_inline_record_decoder_expr generator_settings decls
+    constructor_name =
   let parsed_decls = List.map (parse_inline_decl generator_settings) decls in
   let constructor =
-    Exp.construct (lid constructor_name) (Some (generate_record_expr parsed_decls))
+    Exp.construct (lid constructor_name)
+      (Some (generate_record_expr parsed_decls))
   in
   generate_nested_decoder ~ok_expr:[%expr Ok [%e constructor]] parsed_decls
 

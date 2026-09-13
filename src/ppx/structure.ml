@@ -1,4 +1,4 @@
-open Ppxlib
+open Rescript_ppxlib
 open Parsetree
 open Ast_helper
 open Codecs
@@ -8,12 +8,13 @@ let add_params param_names expr =
   List.fold_right
     (fun s acc ->
       let pat = Pat.var (mknoloc s) in
-      Exp.fun_ Asttypes.Nolabel None pat acc |> Utils.expr_func ~arity:1)
+      Exp.fun_ ~arity:(Some 1) Asttypes.Nolabel None pat acc
+      |> Utils.expr_func ~arity:1)
     param_names
     (Utils.expr_func ~arity:1 [%expr fun v -> [%e expr] v])
 
-let generate_codec_decls type_name param_names ?value_encoder
-    (encoder, decoder) =
+let generate_codec_decls type_name param_names ?value_encoder (encoder, decoder)
+    =
   let encoder_pat = Pat.var (mknoloc (type_name ^ Utils.encoder_func_suffix)) in
   let value_encoder_pat =
     Pat.var (mknoloc (type_name ^ Utils.value_encoder_func_suffix))
@@ -40,9 +41,11 @@ let generate_codec_decls type_name param_names ?value_encoder
     match (encoder, value_encoder) with
     | None, _ -> vbs
     | Some encoder, None ->
-        vbs @ [ Vb.mk value_encoder_pat (add_params encoder_param_names encoder) ]
+        vbs
+        @ [ Vb.mk value_encoder_pat (add_params encoder_param_names encoder) ]
     | _, Some encoder ->
-        vbs @ [ Vb.mk value_encoder_pat (add_params encoder_param_names encoder) ]
+        vbs
+        @ [ Vb.mk value_encoder_pat (add_params encoder_param_names encoder) ]
   in
 
   let vbs =
@@ -113,9 +116,7 @@ let map_type_decl decl =
 let map_structure_item mapper ({ pstr_desc } as structure_item) =
   match pstr_desc with
   | Pstr_type (rec_flag, decls) -> (
-      let value_bindings =
-        decls |> List.map map_type_decl |> List.concat
-      in
+      let value_bindings = decls |> List.map map_type_decl |> List.concat in
       [ mapper#structure_item structure_item ]
       @
       match List.length value_bindings > 0 with

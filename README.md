@@ -139,6 +139,8 @@ Read our [Guide with examples](docs/GUIDE.md)
 
 NOTE: Starting from v0.2.8, support for curried mode is discontinued to align with the changes in compiler v12.
 
+The `feature/new-ppxlib` branch targets ReScript 12's released `Parsetree` directly through `rescript-ppxlib` 1.x. Until the native PPX ABI is available in an official compiler release, this branch requires the companion ReScript 12 compiler fork with `-rescript-ppx` / `rescript-ppx-flags` support.
+
 ```sh
 yarn add -D @mununki/ppx-spice
 ```
@@ -149,7 +151,7 @@ yarn add -D @mununki/ppx-spice
 "bs-dependencies": [
   "@mununki/ppx-spice"
 ],
-"ppx-flags": [
+"rescript-ppx-flags": [
   ...,
   "@mununki/ppx-spice/ppx"
 ],
@@ -164,12 +166,13 @@ Make sure running the below commands in `/src`.
 1. Create a sandbox with opam
 
 ```
-opam switch create spice 4.14.0
+opam switch create spice 5.3.0
 ```
 
 2. Install dependencies
 
 ```
+opam pin add rescript-ppxlib /absolute/path/to/rescript-ppxlib
 opam install . --deps-only
 ```
 

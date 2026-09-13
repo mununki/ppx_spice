@@ -1,4 +1,4 @@
-open Ppxlib
+open Rescript_ppxlib
 open Parsetree
 open Ast_helper
 open Utils
@@ -20,19 +20,20 @@ let generate_constructor_json_expr constructor_expr =
       | _ -> fail pexp_loc "cannot find a name??!")
   | { pexp_loc } -> fail pexp_loc "cannot find a name???"
 
-let is_optional_field { pld_attributes } =
-  [ "ns.optional"; "res.optional" ]
-  |> List.map (fun attr -> get_attribute_by_name pld_attributes attr)
-  |> List.exists (function Ok (Some _) -> true | _ -> false)
+let is_optional_field { pld_attributes; pld_optional; _ } =
+  pld_optional
+  || [ "ns.optional"; "res.optional" ]
+     |> List.map (fun attr -> get_attribute_by_name pld_attributes attr)
+     |> List.exists (function Ok (Some _) -> true | _ -> false)
 
 let generate_inline_record_payload_pattern fields =
   fields
-  |> List.map
-       (fun ({ pld_name = { txt; loc } } as field) ->
-         let attrs =
-           if is_optional_field field then [ Utils.attr_optional ] else []
-         in
-         (lid txt, Pat.var ~loc ~attrs (mkloc txt loc)))
+  |> List.map (fun ({ pld_name = { txt; loc } } as field) ->
+      {
+        lid = lid txt;
+        x = Pat.var ~loc (mkloc txt loc);
+        opt = is_optional_field field;
+      })
   |> fun fields -> Pat.record fields Asttypes.Closed
 
 let prefix_payload_decode_error expr =
@@ -47,7 +48,9 @@ let generate_inline_record_payload_decoder generator_settings fields name =
     let v = Array.getUnsafe json_arr 1 in
     match (v : JSON.t) with
     | JSON.Object dict ->
-        [%e Records.generate_inline_record_decoder_expr generator_settings fields name]
+        [%e
+          Records.generate_inline_record_decoder_expr generator_settings fields
+            name]
     | _ -> Spice.error "Not an object" v]
   |> prefix_payload_decode_error
 
@@ -58,8 +61,8 @@ let generate_unboxed_inline_record_decoder generator_settings fields name =
         match (v : JSON.t) with
         | JSON.Object dict ->
             [%e
-              Records.generate_inline_record_decoder_expr generator_settings fields
-                name]
+              Records.generate_inline_record_decoder_expr generator_settings
+                fields name]
         | _ -> Spice.error "Not an object" v]
 
 let generate_encoder_case generator_settings unboxed has_attr_as
@@ -74,7 +77,7 @@ let generate_encoder_case generator_settings unboxed has_attr_as
         | _ ->
             args
             |> List.mapi (fun i _ ->
-                   mkloc ("v" ^ string_of_int i) pcd_loc |> Pat.var)
+                mkloc ("v" ^ string_of_int i) pcd_loc |> Pat.var)
             |> Pat.tuple
             |> fun v -> Some v
       in
@@ -83,12 +86,13 @@ let generate_encoder_case generator_settings unboxed has_attr_as
         |> List.map (Codecs.generate_value_codecs generator_settings)
         |> List.map (fun (encoder, _) -> Option.get encoder)
         |> List.mapi (fun i e ->
-               Exp.apply ~loc:pcd_loc e
-                 [ (Asttypes.Nolabel, make_ident_expr ("v" ^ string_of_int i)) ])
+            Exp.apply ~loc:pcd_loc e
+              [ (Asttypes.Nolabel, make_ident_expr ("v" ^ string_of_int i)) ])
         |> List.append [ json_expr ]
       in
 
       {
+        pc_bar = None;
         pc_lhs = Pat.construct (lid name) lhs_vars;
         pc_guard = None;
         pc_rhs =
@@ -104,6 +108,7 @@ let generate_encoder_case generator_settings unboxed has_attr_as
       let rhs_list = [ json_expr; payload_expr ] in
 
       {
+        pc_bar = None;
         pc_lhs =
           Pat.construct (lid name)
             (Some (generate_inline_record_payload_pattern fields));
@@ -116,6 +121,7 @@ let generate_encoder_case generator_settings unboxed has_attr_as
 
 let generate_decode_success_case num_args constructor_name =
   {
+    pc_bar = None;
     pc_lhs =
       Array.init num_args (fun i ->
           mknoloc ("v" ^ string_of_int i) |> Pat.var |> fun p ->
@@ -142,16 +148,15 @@ let generate_arg_decoder generator_settings args constructor_name =
        (args
        |> List.map (Codecs.generate_value_codecs generator_settings)
        |> List.mapi (fun i (_, decoder) ->
-              Exp.apply (Option.get decoder)
-                [
-                  ( Asttypes.Nolabel,
-                    (* +1 because index 0 is the constructor *)
-                    let idx =
-                      Pconst_integer (string_of_int (i + 1), None)
-                      |> Exp.constant
-                    in
-                    [%expr Array.getUnsafe json_arr [%e idx]] );
-                ])
+           Exp.apply (Option.get decoder)
+             [
+               ( Asttypes.Nolabel,
+                 (* +1 because index 0 is the constructor *)
+                 let idx =
+                   Pconst_integer (string_of_int (i + 1), None) |> Exp.constant
+                 in
+                 [%expr Array.getUnsafe json_arr [%e idx]] );
+             ])
        |> tuple_or_singleton Exp.tuple)
 
 let generate_decoder_case generator_settings
@@ -171,8 +176,9 @@ let generate_decoder_case generator_settings
       in
 
       {
+        pc_bar = None;
         pc_lhs =
-          ( Pconst_string (name, Location.none, None) |> Pat.constant |> fun v ->
+          ( Pconst_string (name, None) |> Pat.constant |> fun v ->
             Some v |> Pat.construct (lid "JSON.String") );
         pc_guard = None;
         pc_rhs =
@@ -188,8 +194,9 @@ let generate_decoder_case generator_settings
       in
 
       {
+        pc_bar = None;
         pc_lhs =
-          ( Pconst_string (name, Location.none, None) |> Pat.constant |> fun v ->
+          ( Pconst_string (name, None) |> Pat.constant |> fun v ->
             Some v |> Pat.construct (lid "JSON.String") );
         pc_guard = None;
         pc_rhs =
@@ -218,7 +225,7 @@ let generate_decoder_case_attr ~is_string generator_settings
       match const with
       | Some const ->
           let if' =
-            Exp.apply (make_ident_expr "=")
+            Exp.apply (make_ident_expr "==")
               [
                 (Asttypes.Nolabel, Exp.constant const);
                 (Asttypes.Nolabel, [%expr str_or_num]);
@@ -250,15 +257,15 @@ let generate_unboxed_decode generator_settings
           | None -> None)
       | _ -> fail pcd_loc "Expected exactly one type argument")
   | Pcstr_record fields ->
-      Some (generate_unboxed_inline_record_decoder generator_settings fields name)
+      Some
+        (generate_unboxed_inline_record_decoder generator_settings fields name)
 
 let parse_decl _generator_settings
     ({ pcd_name = { txt }; pcd_loc; pcd_attributes } as constr_decl) =
   let alias, has_attr_as =
     match get_attribute_by_name pcd_attributes "spice.as" with
     | Ok (Some attribute) -> (get_expression_from_payload attribute, true)
-    | Ok None ->
-        (Exp.constant (Pconst_string (txt, Location.none, Some "*j")), false)
+    | Ok None -> (Exp.constant (Pconst_string (txt, Some "*j")), false)
     | Error s -> (fail pcd_loc s, false)
   in
 
@@ -267,20 +274,19 @@ let parse_decl _generator_settings
 let validate_spice_as_payload unboxed parsed_decls =
   if not unboxed then
     parsed_decls
-    |> List.iter
-         (fun { has_attr_as; constr_decl = { pcd_args; pcd_loc }; _ } ->
-           match (has_attr_as, pcd_args) with
-           | true, Pcstr_tuple (_ :: _) ->
-               fail pcd_loc
-                 "@spice.as is only supported on constructors without payload; \
-                  use the default tagged array encoding or @unboxed for \
-                  single-payload variants"
-           | true, Pcstr_record _ ->
-               fail pcd_loc
-                 "@spice.as is only supported on constructors without payload; \
-                  use the default tagged array encoding or @unboxed for \
-                  single-payload variants"
-           | _ -> ())
+    |> List.iter (fun { has_attr_as; constr_decl = { pcd_args; pcd_loc }; _ } ->
+        match (has_attr_as, pcd_args) with
+        | true, Pcstr_tuple (_ :: _) ->
+            fail pcd_loc
+              "@spice.as is only supported on constructors without payload; \
+               use the default tagged array encoding or @unboxed for \
+               single-payload variants"
+        | true, Pcstr_record _ ->
+            fail pcd_loc
+              "@spice.as is only supported on constructors without payload; \
+               use the default tagged array encoding or @unboxed for \
+               single-payload variants"
+        | _ -> ())
 
 let generate_codecs ({ do_encode; do_decode } as generator_settings)
     constr_decls unboxed =
@@ -306,7 +312,7 @@ let generate_codecs ({ do_encode; do_decode } as generator_settings)
       in
       Some
         (Exp.constraint_ match_expr Utils.ctyp_json_t
-        |> Exp.fun_ Asttypes.Nolabel None [%pat? v]
+        |> Exp.fun_ ~arity:(Some 1) Asttypes.Nolabel None [%pat? v]
         |> Utils.expr_func ~arity:1)
     else None
   in
@@ -351,6 +357,7 @@ let generate_codecs ({ do_encode; do_decode } as generator_settings)
         else
           let decoder_default_case =
             {
+              pc_bar = None;
               pc_lhs = [%pat? _];
               pc_guard = None;
               pc_rhs =

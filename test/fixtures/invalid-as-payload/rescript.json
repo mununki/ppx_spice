@@ -13,7 +13,7 @@
     }
   ],
   "suffix": ".mjs",
-  "ppx-flags": [
+  "rescript-ppx-flags": [
     "@mununki/ppx-spice/ppx"
   ],
   "dependencies": [

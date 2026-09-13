@@ -1,4 +1,4 @@
-open Ppxlib
+open Rescript_ppxlib
 open Parsetree
 open Ast_helper
 open Utils
@@ -6,6 +6,7 @@ open Utils
 let generate_error_case ?(has_type_offset = false) numArgs i _ =
   let offset = if has_type_offset then 1 else 0 in
   {
+    pc_bar = None;
     pc_lhs =
       Array.init numArgs (fun which ->
           match which == i with

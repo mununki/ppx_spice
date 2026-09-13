@@ -1,4 +1,4 @@
-open Ppxlib
+open Rescript_ppxlib
 open Parsetree
 open Ast_helper
 open Utils
@@ -7,8 +7,8 @@ let generate_encoder composite_encoders =
   let arrExp =
     composite_encoders
     |> List.mapi (fun i e ->
-           let vExp = Exp.ident (lid ("v" ^ string_of_int i)) in
-           [%expr [%e e] [%e vExp]])
+        let vExp = Exp.ident (lid ("v" ^ string_of_int i)) in
+        [%expr [%e e] [%e vExp]])
     |> Exp.array
   in
   let deconstructor_pattern =
@@ -24,6 +24,7 @@ let generate_encoder composite_encoders =
 
 let generate_decode_success_case num_args =
   {
+    pc_bar = None;
     pc_lhs =
       Array.init num_args (fun i ->
           mknoloc ("v" ^ string_of_int i) |> Pat.var |> fun p ->
@@ -41,8 +42,8 @@ let generate_decode_switch composite_decoders =
   let decode_expr =
     composite_decoders
     |> List.mapi (fun i d ->
-           let ident = make_ident_expr ("v" ^ string_of_int i) in
-           [%expr [%e d] [%e ident]])
+        let ident = make_ident_expr ("v" ^ string_of_int i) in
+        [%expr [%e d] [%e ident]])
     |> Exp.tuple
   in
   composite_decoders

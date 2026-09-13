@@ -22,7 +22,7 @@
   "dev-dependencies": [
     "@dusty-phillips/rescript-zora"
   ],
-  "ppx-flags": [
+  "rescript-ppx-flags": [
     "@mununki/ppx-spice/ppx"
   ],
   "warnings": {

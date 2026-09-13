@@ -2,11 +2,11 @@
  (name ppx_spice)
  (public_name ppx_spice)
  (kind ppx_rewriter)
- (libraries ppxlib)
+ (libraries rescript-ppxlib)
  (flags
   (:standard -w -9))
  ; 9 = labels not bound in record pattern
  (preprocess
-  (pps ppxlib.metaquot)))
+  (pps rescript-ppxlib.metaquot)))
 
 (include_subdirs unqualified)

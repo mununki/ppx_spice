@@ -1,3 +1,5 @@
+open Rescript_ppxlib
+
 val generate_codecs :
   Utils.generator_settings ->
   Parsetree.label_declaration list ->
